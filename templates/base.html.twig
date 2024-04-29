@@ -8,9 +8,21 @@
     {% endblock %}
 
     {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
     {% endblock %}
 <body>
+<h1></h1>
+<nav>
+    <ul  style="display:flex; flex-direction: row;list-style: none;">
+        <li><a href="{{ path('app_sortir_accueil') }}">Home</a></li>
+        <li><a href="{{ path('app_register') }}">Création du compte</a></li>
+        <li><a href="{{ path('app_login') }}">Connection</a></li>
+        <li><a href="{{ path('app_sortir_monProfil') }}">Mon profil</a></li>
+    </ul>
+</nav>
+<div>
+    Vous êtes connecté en tant que {{ app.user }}
+</div>
 
 {% block body %}{% endblock %}
 </body>
