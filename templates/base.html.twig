@@ -18,12 +18,15 @@
         <li><a href="{{ path('app_register') }}">Création du compte</a></li>
         <li><a href="{{ path('app_login') }}">Connection</a></li>
         <li><a href="{{ path('app_sortir_monProfil') }}">Mon profil</a></li>
+        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+            <p>Bienvenue, {{ app.user.pseudo }}!</p>
+            <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
+        {% else %}
+            <li><a href="{{ path('app_login') }}">Connexion</a></li>
+        {% endif %}
+        {% if is_granted('IS_AUTHENTICATED_FULLY')%}
+        <li><a href="{{ path('app_sortir_updateProfil',{'id':user.id}) }}">Mon profil</a></li>
+        {% endif %}
     </ul>
 </nav>
-<div>
-    Vous êtes connecté en tant que {{ app.user }}
-</div>
-
 {% block body %}{% endblock %}
-</body>
-</html>
