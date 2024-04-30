@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\SortieRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -41,11 +43,33 @@ class Sortie
     #[ORM\Column]
     private ?int $organisateur = null;
 
-    #[ORM\Column]
-    private ?int $noLieu = null;
 
-    #[ORM\Column]
-    private ?int $noEtat = null;
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'sorties')]
+    private Collection $Users;
+
+    #[ORM\ManyToOne(inversedBy: 'sortiesOrga')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $idOrga = null;
+
+    #[ORM\ManyToOne(inversedBy: 'noEtat')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Etat $noEtat = null;
+
+    #[ORM\ManyToOne(inversedBy: 'sorties')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Lieu $noLieu = null;
+
+    #[ORM\ManyToOne(inversedBy: 'sorties')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Site $noSite = null;
+
+    public function __construct()
+    {
+        $this->Users = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -160,26 +184,76 @@ class Sortie
         return $this;
     }
 
-    public function getNoLieu(): ?int
+
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getUsers(): Collection
+    {
+        return $this->Users;
+    }
+
+    public function addUser(User $user): static
+    {
+        if (!$this->Users->contains($user)) {
+            $this->Users->add($user);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(User $user): static
+    {
+        $this->Users->removeElement($user);
+
+        return $this;
+    }
+
+    public function getIdOrga(): ?User
+    {
+        return $this->idOrga;
+    }
+
+    public function setIdOrga(?User $idOrga): static
+    {
+        $this->idOrga = $idOrga;
+
+        return $this;
+    }
+
+    public function getNoEtat(): ?Etat
+    {
+        return $this->noEtat;
+    }
+
+    public function setNoEtat(?Etat $noEtat): static
+    {
+        $this->noEtat = $noEtat;
+
+        return $this;
+    }
+
+    public function getNoLieu(): ?Lieu
     {
         return $this->noLieu;
     }
 
-    public function setNoLieu(int $noLieu): static
+    public function setNoLieu(?Lieu $noLieu): static
     {
         $this->noLieu = $noLieu;
 
         return $this;
     }
 
-    public function getNoEtat(): ?int
+    public function getNoSite(): ?Site
     {
-        return $this->noEtat;
+        return $this->noSite;
     }
 
-    public function setNoEtat(int $noEtat): static
+    public function setNoSite(?Site $noSite): static
     {
-        $this->noEtat = $noEtat;
+        $this->noSite = $noSite;
 
         return $this;
     }
