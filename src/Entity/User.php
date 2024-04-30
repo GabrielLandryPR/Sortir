@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -11,6 +13,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PSEUDO', fields: ['pseudo'])]  // A vérifier !!!!!!!!!!!!!!!!!!!!
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -49,14 +52,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?bool $actif = null;
 
-    #[ORM\Column]
-    private ?bool $organisateur = false;
 
     #[ORM\Column(length: 25)]
     private ?string $pseudo = null;
 
-    #[ORM\Column]
-    private ?int $noSite = null;
+
+    /**
+     * @var Collection<int, Sortie>
+     */
+    #[ORM\ManyToMany(targetEntity: Sortie::class, mappedBy: 'Sorties')]
+    private Collection $sorties;
+
+    /**
+     * @var Collection<int, Sortie>
+     */
+    #[ORM\OneToMany(targetEntity: Sortie::class, mappedBy: 'idOrga', orphanRemoval: true)]
+    private Collection $sortiesOrga;
+
+    public function __construct()
+    {
+        $this->sorties = new ArrayCollection();
+        $this->sortiesOrga = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -217,14 +234,60 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getNoSite(): ?int
+
+    /**
+     * @return Collection<int, Sortie>
+     */
+    public function getSorties(): Collection
     {
-        return $this->noSite;
+        return $this->sorties;
     }
 
-    public function setNoSite(int $noSite): static
+    public function addSortie(Sortie $sortie): static
     {
-        $this->noSite = $noSite;
+        if (!$this->sorties->contains($sortie)) {
+            $this->sorties->add($sortie);
+            $sortie->addUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSortie(Sortie $sortie): static
+    {
+        if ($this->sorties->removeElement($sortie)) {
+            $sortie->removeUser($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Sortie>
+     */
+    public function getSortiesOrga(): Collection
+    {
+        return $this->sortiesOrga;
+    }
+
+    public function addSortiesOrga(Sortie $sortiesOrga): static
+    {
+        if (!$this->sortiesOrga->contains($sortiesOrga)) {
+            $this->sortiesOrga->add($sortiesOrga);
+            $sortiesOrga->setIdOrga($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSortiesOrga(Sortie $sortiesOrga): static
+    {
+        if ($this->sortiesOrga->removeElement($sortiesOrga)) {
+            // set the owning side to null (unless already changed)
+            if ($sortiesOrga->getIdOrga() === $this) {
+                $sortiesOrga->setIdOrga(null);
+            }
+        }
 
         return $this;
     }

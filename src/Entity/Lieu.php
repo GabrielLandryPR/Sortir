@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\LieuRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LieuRepository::class)]
@@ -25,8 +27,21 @@ class Lieu
     #[ORM\Column(nullable: true)]
     private ?float $latitude = null;
 
-    #[ORM\Column]
-    private ?int $noVille = null;
+
+    /**
+     * @var Collection<int, Sortie>
+     */
+    #[ORM\OneToMany(targetEntity: Sortie::class, mappedBy: 'noLieu')]
+    private Collection $sorties;
+
+    #[ORM\ManyToOne(inversedBy: 'lieus')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Ville $noVille = null;
+
+    public function __construct()
+    {
+        $this->sorties = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -81,12 +96,43 @@ class Lieu
         return $this;
     }
 
-    public function getNoVille(): ?int
+
+    /**
+     * @return Collection<int, Sortie>
+     */
+    public function getSorties(): Collection
+    {
+        return $this->sorties;
+    }
+
+    public function addSorty(Sortie $sorty): static
+    {
+        if (!$this->sorties->contains($sorty)) {
+            $this->sorties->add($sorty);
+            $sorty->setNoLieu($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSorty(Sortie $sorty): static
+    {
+        if ($this->sorties->removeElement($sorty)) {
+            // set the owning side to null (unless already changed)
+            if ($sorty->getNoLieu() === $this) {
+                $sorty->setNoLieu(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getNoVille(): ?Ville
     {
         return $this->noVille;
     }
 
-    public function setNoVille(int $noVille): static
+    public function setNoVille(?Ville $noVille): static
     {
         $this->noVille = $noVille;
 
