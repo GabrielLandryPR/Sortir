@@ -17,15 +17,14 @@
         <li><a href="{{ path('app_sortir_accueil') }}">Home</a></li>
         <li><a href="{{ path('app_register') }}">Création du compte</a></li>
         <li><a href="{{ path('app_login') }}">Connection</a></li>
-        <li><a href="{{ path('app_sortir_monProfil') }}">Mon profil</a></li>
         {% if is_granted('IS_AUTHENTICATED_FULLY') %}
             <p>Bienvenue, {{ app.user.pseudo }}!</p>
             <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
         {% else %}
             <li><a href="{{ path('app_login') }}">Connexion</a></li>
         {% endif %}
-        {% if is_granted('IS_AUTHENTICATED_FULLY')%}
-        <li><a href="{{ path('app_sortir_updateProfil',{'id':user.id}) }}">Mon profil</a></li>
+        {% if app.user%}
+        <li><a href="{{ path('/sortir/updateProfil{id}') }}">Modifier profil</a></li>
         {% endif %}
     </ul>
 </nav>

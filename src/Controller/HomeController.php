@@ -17,14 +17,17 @@ class HomeController extends AbstractController
 {
 
     #[Route('/accueil',name:'_accueil')]
-    public function home(UserRepository $userRepository, User $user):Response
+    public function home(Request $request,UserRepository $userRepository, User $user, EntityManagerInterface $entityManager):Response
     {
+        $user->
+        $user = $this->getUser();
+        $id = $this->getUser()->getId();
 
-        $user= $this->getUser();
-        $id =$user->getId();
+
+
         return $this->render('navigation/Accueil.html.twig',[
             'user'=>$user,
-            'id'=>$user
+            'id'=>$id
         ]);
     }
 
