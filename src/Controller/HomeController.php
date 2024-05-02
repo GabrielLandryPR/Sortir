@@ -19,7 +19,7 @@ class HomeController extends AbstractController
     #[Route('/accueil',name:'_accueil')]
     public function home(Request $request,UserRepository $userRepository, User $user, EntityManagerInterface $entityManager):Response
     {
-        $user->
+
         $user = $this->getUser();
         $id = $this->getUser()->getId();
 

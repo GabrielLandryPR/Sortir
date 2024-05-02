@@ -24,7 +24,7 @@
             <li><a href="{{ path('app_login') }}">Connexion</a></li>
         {% endif %}
         {% if app.user%}
-        <li><a href="{{ path('/sortir/updateProfil{id}') }}">Modifier profil</a></li>
+        <li><a href="{{ path('app_sortir_updateProfil', {'id': user.id}) }}">Modifier profil</a></li>
         {% endif %}
     </ul>
 </nav>
