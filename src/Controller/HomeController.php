@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\Sortie;
+use App\Form\SortieType;
 use App\Entity\User;
 use App\Form\UpdateProfilType;
 use App\Repository\UserRepository;
@@ -38,17 +40,36 @@ class HomeController extends AbstractController
         );
     }
 
-    #[Route('/creerSorti',name:'_creerSorti')]
-    public function creerSorti(User $user):Response
+    #[Route('/creerSortie', name:'_creerSortie')]
+    public function creerSortie(Request $request, EntityManagerInterface $entityManager): Response
     {
-        return $this->render('navigation/creerSorti.html.twig',[
-            "user"=>$user]);
+        $sortie = new Sortie();
+        $form = $this->createForm(SortieType::class, $sortie);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $user = $this->getUser();
+            $sortie->setOrganisateur($user->getId());
+
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_sortir_accueil');
+        }
+
+        $user = $this->getUser();
+
+        return $this->render('navigation/creerSortie.html.twig', [
+            'form' => $form->createView(),
+            'sortie' => $sortie,
+            'user' => $user,
+        ]);
     }
 
-    #[Route('/modifierSorti',name:'_modifierSorti')]
+    #[Route('/modifierSortie',name:'_modifierSortie')]
     public function modifierSorti(User $user):Response
     {
-        return $this->render('navigation/creerSorti.html.twig',[
+        return $this->render('navigation/creerSortie.html.twig',[
             "user"=>$user
         ]);
     }
@@ -77,6 +98,74 @@ class HomeController extends AbstractController
             "user"=> $user
         ]);
     }
+
+#[Route('/inscriptionSortie/{id}', name:'_inscriptionSortie')]
+public function inscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
+{
+    $user = $this->getUser();
+    {
+        {#$sortie = $entityManager->getRepository(Sortie::class)->find($id);#}}
+
+            if (!$user) {
+                throw $this->createNotFoundException('utilisateur non trouvée');
+            }
+
+            $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+
+            if (!$sortie) {
+                throw $this->createNotFoundException('Sortie non trouvée');
+            }
+
+            $sortie->addUser($user);
+
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
+        }
+
+    }
+}
+#[Route('/detailSortie/{id}', name:'_detailSortie')]
+public function detailSortie(int $id, EntityManagerInterface $entityManager): Response
+{
+    $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+
+    if (!$sortie) {
+        throw $this->createNotFoundException('Sortie non trouvée');
+    }
+
+    $user = $this->getUser();
+
+    return $this->render('navigation/detailSortie.html.twig', [
+        'sortie' => $sortie,
+        'user' => $user,
+    ]);
+}
+
+#[Route('/desinscriptionSortie/{id}', name:'_desinscriptionSortie')]
+public function desinscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
+{
+    $user = $this->getUser();
+
+    if (!$user) {
+        throw $this->createNotFoundException('Utilisateur non trouvé');
+    }
+
+    $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+
+    if (!$sortie) {
+        throw $this->createNotFoundException('Sortie non trouvée');
+    }
+
+    $sortie->removeUser($user);
+
+    $entityManager->persist($sortie);
+    $entityManager->flush();
+
+    return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
+}
+
 
 }
 

@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>{{ sortie.nomSortie }}</h1>
+    <h2>Participants :</h2>
+    <ul>
+    {% for user in sortie.users %}
+        <li>{{ user.pseudo }}</li>
+    {% endfor %}
+    </ul>
+
+{% if user in sortie.users %}
+    {% if user.id != sortie.idOrga.id %}
+        <a href="{{ path('app_sortir_desinscriptionSortie', {'id': sortie.id}) }}">Se désinscrire de cette sortie</a>
+    {% endif %}
+{% else %}
+    <a href="{{ path('app_sortir_inscriptionSortie', {'id': sortie.id}) }}">S'inscrire à cette sortie</a>
+{% endif %}
+
+{% endblock %}
