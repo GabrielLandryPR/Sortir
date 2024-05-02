@@ -13,7 +13,6 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PSEUDO', fields: ['pseudo'])]  // A vérifier !!!!!!!!!!!!!!!!!!!!
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -68,6 +67,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\OneToMany(targetEntity: Sortie::class, mappedBy: 'idOrga', orphanRemoval: true)]
     private Collection $sortiesOrga;
+
+    #[ORM\ManyToOne(inversedBy: 'users')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Site $noSite = null;
 
     public function __construct()
     {
@@ -289,6 +292,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $sortiesOrga->setIdOrga(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getNoSite(): ?Site
+    {
+        return $this->noSite;
+    }
+
+    public function setNoSite(?Site $noSite): static
+    {
+        $this->noSite = $noSite;
 
         return $this;
     }
