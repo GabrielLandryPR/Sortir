@@ -2,19 +2,32 @@
 
 {% block body %}
     <h1>{{ sortie.nomSortie }}</h1>
+    <p>Etat: {{ sortie.noEtat.libelle }}</p>
+    <p>Date et heure de la sortie: {{ sortie.dateDebut|date('d-m-Y H:i') }}</p>
+    <p>Date limite d'inscription: {{ sortie.dateFin|date('d-m-Y') }}</p>
+    <p>Nombre de places: {{ sortie.nbInscriptionMax }}</p>
+    <p>Durée: {{ sortie.duree }}</p>
+    <p>Description: {{ sortie.description }}</p>
+    <p>Ville organisatrice: {{ sortie.noSite.nomSite }}</p>
+    <p>Lieu: {{ sortie.noLieu.nomLieu }}</p>
+    <p>Rue: {{ sortie.noLieu.rue }}</p>
+    <p>Code postal: {{ sortie.noLieu.noVille.codePostal }}</p>    <p>Latitude: {{ sortie.noLieu.latitude }}</p>
+    <p>Longitude: {{ sortie.noLieu.longitude }}</p>
+
     <h2>Participants :</h2>
+   <div style="height: 200px; overflow-y: scroll;">
     <ul>
     {% for user in sortie.users %}
         <li>{{ user.pseudo }}</li>
     {% endfor %}
     </ul>
+    </div>
 
-{% if user in sortie.users %}
-    {% if user.id != sortie.idOrga.id %}
-        <a href="{{ path('app_sortir_desinscriptionSortie', {'id': sortie.id}) }}">Se désinscrire de cette sortie</a>
+    {% if user in sortie.users %}
+        {% if user.id != sortie.idOrga.id %}
+            <a href="{{ path('app_sortir_desinscriptionSortie', {'id': sortie.id}) }}">Se désinscrire de cette sortie</a>
+        {% endif %}
+    {% else %}
+        <a href="{{ path('app_sortir_inscriptionSortie', {'id': sortie.id}) }}">S'inscrire à cette sortie</a>
     {% endif %}
-{% else %}
-    <a href="{{ path('app_sortir_inscriptionSortie', {'id': sortie.id}) }}">S'inscrire à cette sortie</a>
-{% endif %}
-
 {% endblock %}

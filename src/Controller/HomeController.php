@@ -19,19 +19,20 @@ class HomeController extends AbstractController
 {
 
     #[Route('/accueil',name:'_accueil')]
-    public function home(Request $request,UserRepository $userRepository, User $user, EntityManagerInterface $entityManager):Response
-    {
-
-        $user = $this->getUser();
-        $id = $this->getUser()->getId();
-
-
-
-        return $this->render('navigation/Accueil.html.twig',[
-            'user'=>$user,
-            'id'=>$id
-        ]);
+public function home(Request $request, UserRepository $userRepository, EntityManagerInterface $entityManager): Response
+{
+    $user = $this->getUser();
+    if (!$user) {
+        return $this->redirectToRoute('app_login');
     }
+
+    $id = $user->getId();
+
+    return $this->render('navigation/Accueil.html.twig',[
+        'user' => $user,
+        'id' => $id
+    ]);
+}
 
     #[Route('/monProfil',name:'_monProfil')]
     public function monProfil(User $user):Response
