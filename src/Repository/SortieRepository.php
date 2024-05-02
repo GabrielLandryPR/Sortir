@@ -16,6 +16,15 @@ class SortieRepository extends ServiceEntityRepository
         parent::__construct($registry, Sortie::class);
     }
 
+    public function findByCriterias() {
+
+        $q= $this->createQueryBuilder('s')
+            ->orderBy('s.noSite', order: 'ASC');
+
+        return $q->getQuery()->getResult();
+
+    }
+
     //    /**
     //     * @return Sortie[] Returns an array of Sortie objects
     //     */

@@ -2,13 +2,16 @@
 
 namespace App\Controller;
 
+use App\Entity\Sortie;
 use App\Entity\User;
+use App\Form\FilterType;
 use App\Form\UpdateProfilType;
+use App\Repository\SiteRepository;
+use App\Repository\SortieRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -31,29 +34,45 @@ class HomeController extends AbstractController
         ]);
     }
 
-    #[Route('/monProfil',name:'_monProfil')]
-    public function monProfil(User $user):Response
+    #[Route('/list',name:'_list')]
+    public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
+    {
+        $sorties = $sortieRepository->findAll();
+        $sites = $siteRepository->findAll();
+
+
+
+        return $this->render('navigation/list.html.twig', [
+                'sorties' => $sorties,
+                'sites' => $sites,
+            ]
+        );
+    }
+
+        #[
+        Route('/monProfil', name: '_monProfil')]
+    public function monProfil(User $user): Response
     {
         return $this->render('navigation/monProfil.html.twig',
         );
     }
 
-    #[Route('/creerSorti',name:'_creerSorti')]
-    public function creerSorti(User $user):Response
+    #[Route('/creerSorti', name: '_creerSorti')]
+    public function creerSorti(User $user): Response
     {
-        return $this->render('navigation/creerSorti.html.twig',[
-            "user"=>$user]);
+        return $this->render('navigation/creerSorti.html.twig', [
+            "user" => $user]);
     }
 
-    #[Route('/modifierSorti',name:'_modifierSorti')]
-    public function modifierSorti(User $user):Response
+    #[Route('/modifierSorti', name: '_modifierSorti')]
+    public function modifierSorti(User $user): Response
     {
-        return $this->render('navigation/creerSorti.html.twig',[
-            "user"=>$user
+        return $this->render('navigation/creerSorti.html.twig', [
+            "user" => $user
         ]);
     }
 
-    #[Route('/updateProfil/{id}', name:'_updateProfil')]
+    #[Route('/updateProfil/{id}', name: '_updateProfil')]
     public function updateProfil(Request $request, int $id, EntityManagerInterface $entityManager): Response
     {
         $user = $entityManager->getRepository(User::class)->find($id);
@@ -73,8 +92,8 @@ class HomeController extends AbstractController
         }
 
         return $this->render('registration/updateProfil.html.twig', [
-            'updateProfilForm'=> $updateProfilForm->createView(),
-            "user"=> $user
+            'updateProfilForm' => $updateProfilForm->createView(),
+            "user" => $user
         ]);
     }
 
