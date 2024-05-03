@@ -16,14 +16,15 @@
     <ul  style="display:flex; flex-direction: row;list-style: none;">
         <li><a href="{{ path('app_register') }}">Création du compte</a></li>
         <li><a href="{{ path('app_login') }}">Connection</a></li>
+        <li><a href="{{ path('app_sortir_creerSorti') }}">Créer une sortie</a></li>
+        {% if app.user%}
+        <li><a href="{{ path('app_sortir_monProfil') }}">Mon profil</a></li>
+        {% endif %}
         {% if is_granted('IS_AUTHENTICATED_FULLY') %}
             <p>Bienvenue, {{ app.user.pseudo }}!</p>
             <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
         {% else %}
             <li><a href="{{ path('app_login') }}">Connexion</a></li>
-        {% endif %}
-        {% if app.user%}
-        <li><a href="{{ path('app_sortir_updateProfil', {'id': user.id}) }}">Modifier profil</a></li>
         {% endif %}
     </ul>
 </nav>

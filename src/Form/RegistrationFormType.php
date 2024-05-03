@@ -39,6 +39,10 @@ class RegistrationFormType extends AbstractType
                 'label'=>'pseudo',
                 'required'=> true
             ])
+            ->add('actif',CheckboxType::class,[
+                'label'=>'actif',
+                'required'=> false
+            ])
             ->add('plainPassword', PasswordType::class, [
                 // instead of being set onto the object directly,
                 // this is read and encoded in the controller
