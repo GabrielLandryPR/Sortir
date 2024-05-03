@@ -9,18 +9,10 @@
 
     <h2>Filtrer les sorties :</h2>
 
-
-        <form method="get">
-            <label for="ville">Ville :</label>
-            <select id="ville" name="ville">
-                <option value="">Toutes les villes</option>
-    {% for site in sites %}
-                <option {{ site.nomSite }} </option>
-    {% endfor %}
-            </select>
-            <button type="submit">Filtrer</button>
-        </form>
-
+    {{ form_start(form) }}
+    {{ form_widget(form.site) }}
+    {{ form_widget(form.submit) }}
+{{ form_end(form) }}
 
     {% for sortie in sorties %}
         <table>

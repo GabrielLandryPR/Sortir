@@ -15,6 +15,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
 {
@@ -34,20 +37,44 @@ class HomeController extends AbstractController
         ]);
     }
 
-    #[Route('/list',name:'_list')]
-    public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
-    {
+#[Route('/list',name:'_list')]
+public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
+{
+$sites = $siteRepository->findAll();
+$choices = [];
+foreach ($sites as $site) {
+    $choices[$site->getNomSite()] = $site->getId();
+}
+$choices = ["Tous les sites" => null] + $choices;
+
+$form = $this->createFormBuilder(['site' => null])
+    ->add('site', ChoiceType::class, [
+        'choices'  => $choices,
+        'required' => false,
+    ])
+    ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
+    ->getForm();
+
+   $form->handleRequest($request);
+
+if ($form->isSubmitted() && $form->isValid()) {
+    $data = $form->getData();
+    if ($data['site'] !== null) {
+        $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
+    } else {
         $sorties = $sortieRepository->findAll();
-        $sites = $siteRepository->findAll();
-
-
-
-        return $this->render('navigation/list.html.twig', [
-                'sorties' => $sorties,
-                'sites' => $sites,
-            ]
-        );
     }
+} else {
+    $sorties = $sortieRepository->findAll();
+}
+
+    return $this->render('navigation/list.html.twig', [
+            'sorties' => $sorties,
+            'sites' => $sites,
+            'form' => $form->createView(),
+        ]
+    );
+}
 
         #[
         Route('/monProfil', name: '_monProfil')]
