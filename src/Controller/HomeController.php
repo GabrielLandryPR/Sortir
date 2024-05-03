@@ -5,15 +5,20 @@ namespace App\Controller;
 use App\Entity\Sortie;
 use App\Entity\User;
 use App\Form\SortieFormType;
+use App\Form\FilterType;
 use App\Form\UpdateProfilType;
+use App\Repository\SiteRepository;
+use App\Repository\SortieRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
 {
@@ -34,8 +39,48 @@ public function home(Request $request, UserRepository $userRepository, EntityMan
     ]);
 }
 
-    #[Route('/monProfil',name:'_monProfil')]
-    public function monProfil(User $user):Response
+#[Route('/list',name:'_list')]
+public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
+{
+$sites = $siteRepository->findAll();
+$choices = [];
+foreach ($sites as $site) {
+    $choices[$site->getNomSite()] = $site->getId();
+}
+$choices = ["Tous les sites" => null] + $choices;
+
+$form = $this->createFormBuilder(['site' => null])
+    ->add('site', ChoiceType::class, [
+        'choices'  => $choices,
+        'required' => false,
+    ])
+    ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
+    ->getForm();
+
+   $form->handleRequest($request);
+
+if ($form->isSubmitted() && $form->isValid()) {
+    $data = $form->getData();
+    if ($data['site'] !== null) {
+        $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
+    } else {
+        $sorties = $sortieRepository->findAll();
+    }
+} else {
+    $sorties = $sortieRepository->findAll();
+}
+
+    return $this->render('navigation/list.html.twig', [
+            'sorties' => $sorties,
+            'sites' => $sites,
+            'form' => $form->createView(),
+        ]
+    );
+}
+
+        #[
+        Route('/monProfil', name: '_monProfil')]
+    public function monProfil(User $user): Response
     {
         return $this->render('navigation/monProfil.html.twig',
         );
@@ -69,7 +114,7 @@ public function home(Request $request, UserRepository $userRepository, EntityMan
         ]);
     }
 
-    #[Route('/updateProfil/{id}', name:'_updateProfil')]
+    #[Route('/updateProfil/{id}', name: '_updateProfil')]
     public function updateProfil(Request $request, int $id, EntityManagerInterface $entityManager): Response
     {
         $user = $entityManager->getRepository(User::class)->find($id);
@@ -89,8 +134,8 @@ public function home(Request $request, UserRepository $userRepository, EntityMan
         }
 
         return $this->render('registration/updateProfil.html.twig', [
-            'updateProfilForm'=> $updateProfilForm->createView(),
-            "user"=> $user
+            'updateProfilForm' => $updateProfilForm->createView(),
+            "user" => $user
         ]);
     }
 

@@ -69,6 +69,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Sortie::class, mappedBy: 'idOrga', orphanRemoval: true)]
     private Collection $sortiesOrga;
 
+    #[ORM\ManyToOne(inversedBy: 'users')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Site $noSite = null;
+
     public function __construct()
     {
         $this->sorties = new ArrayCollection();
@@ -211,7 +215,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getOrganisateur(): ?bool
+    public function isOrganisateur(): ?bool
     {
         return $this->organisateur;
     }
@@ -289,6 +293,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $sortiesOrga->setIdOrga(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getNoSite(): ?Site
+    {
+        return $this->noSite;
+    }
+
+    public function setNoSite(?Site $noSite): static
+    {
+        $this->noSite = $noSite;
 
         return $this;
     }

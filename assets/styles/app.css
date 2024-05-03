@@ -1,3 +1,17 @@
+@import "~bootstrap/dist/css/bootstrap.min.css";
+
 body {
     background-color: skyblue;
+}
+
+th {
+    border: solid 1px;
+}
+
+td {
+    border: solid 1px;
+}
+
+table {
+    border: solid 1px;
 }
