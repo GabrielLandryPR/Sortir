@@ -22,7 +22,9 @@ class SortieType extends AbstractType
             ->add('nolieu', TextType::class)
             ->add('description', TextareaType::class)
             ->add('organisateur', TextType::class)
-            ->add('duree', IntegerType::class)
+            ->add('duree', IntegerType::class, [
+                'label' => 'Durée de la sortie (en minutes)'
+            ])
             ->add('nbInscriptionMax', IntegerType::class);
     }
 

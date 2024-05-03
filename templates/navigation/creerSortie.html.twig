@@ -10,3 +10,8 @@
 
     {{ form_end(form) }}
 {% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/duree.js') }}"></script>
+{% endblock %}
