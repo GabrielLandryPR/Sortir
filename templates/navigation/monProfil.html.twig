@@ -5,6 +5,9 @@
 
 {% block body %}
     <h1>Mon profil</h1>
+    {% if app.user%}
+        <li><a href="{{ path('app_sortir_updateProfil', {'id': user.id}) }}">Modifier profil</a></li>
+    {% endif %}
     <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet animi at atque autem,
         ea enim inventore laborum maiores, numquam odit officia optio quo voluptatum.
         Aperiam eaque neque rem sint tempora?</p>

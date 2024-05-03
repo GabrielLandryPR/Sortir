@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Sortie;
 use App\Entity\User;
+use App\Form\SortieFormType;
 use App\Form\UpdateProfilType;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManager;
@@ -34,15 +36,32 @@ class HomeController extends AbstractController
     #[Route('/monProfil',name:'_monProfil')]
     public function monProfil(User $user):Response
     {
-        return $this->render('navigation/monProfil.html.twig',
+        $user = $this->getUser();
+        $id = $this->getUser()->getId();
+        return $this->render('navigation/monProfil.html.twig',[
+            "user"=>$user
+            ]
         );
     }
 
     #[Route('/creerSorti',name:'_creerSorti')]
-    public function creerSorti(User $user):Response
+    public function creerSorti(User $user, Request $request, EntityManagerInterface $entityManager):Response
     {
+        $sortie = new Sortie();
+        $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
+        $sortieFormType->handleRequest($request);
+
+        if ($sortieFormType->isSubmitted() && $sortieFormType->isValid()) {
+            $entityManager->persist($sortie);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Une sortie a été créer');
+
+            return $this->redirectToRoute('app_sortir_accueil');
+        }
         return $this->render('navigation/creerSorti.html.twig',[
-            "user"=>$user]);
+            "user"=>$user,
+            "sortieFormType"=> $sortieFormType]);
     }
 
     #[Route('/modifierSorti',name:'_modifierSorti')]
@@ -54,7 +73,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/updateProfil/{id}', name:'_updateProfil')]
-    public function updateProfil(Request $request, int $id, EntityManagerInterface $entityManager): Response
+    public function updateProfil(Request $request, int $id, EntityManagerInter $entityManager): Response
     {
         $user = $entityManager->getRepository(User::class)->find($id);
 
@@ -77,6 +96,7 @@ class HomeController extends AbstractController
             "user"=> $user
         ]);
     }
+
 
 }
 

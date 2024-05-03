@@ -23,16 +23,7 @@ class UpdateProfilType extends AbstractType
                         'autocomplete' => 'new-password',
                     ],
                 ]])
-            ->add('nom')
-            ->add('prenom')
-            ->add('tel')
-            ->add('pseudo')
-            ->add('submit', SubmitType::class, [
-                'label' => 'Enregistrer',
-                'attr' => [
-                    'class' => 'btn btn-primary',
-                ]
-            ]);
+       ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

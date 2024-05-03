@@ -211,7 +211,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function isOrganisateur(): ?bool
+    public function getOrganisateur(): ?bool
     {
         return $this->organisateur;
     }
@@ -292,4 +292,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function __toString(): string
+    {
+        return $this->pseudo;
+    }
+
+
 }
