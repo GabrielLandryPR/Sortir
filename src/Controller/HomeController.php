@@ -5,12 +5,10 @@ namespace App\Controller;
 use App\Entity\Sortie;
 use App\Entity\User;
 use App\Form\SortieFormType;
-use App\Form\FilterType;
 use App\Form\UpdateProfilType;
 use App\Repository\SiteRepository;
 use App\Repository\SortieRepository;
 use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
@@ -40,35 +39,40 @@ public function home(Request $request, UserRepository $userRepository, EntityMan
 }
 
 #[Route('/list',name:'_list')]
-public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
+public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository):Response
 {
-$sites = $siteRepository->findAll();
-$choices = [];
-foreach ($sites as $site) {
-    $choices[$site->getNomSite()] = $site->getId();
-}
-$choices = ["Tous les sites" => null] + $choices;
+    $sites = $siteRepository->findAll();
+    $choices = [];
+    foreach ($sites as $site) {
+        $choices[$site->getNomSite()] = $site->getId();
+    }
+    $choices = ["Tous les sites" => null] + $choices;
 
-$form = $this->createFormBuilder(['site' => null])
-    ->add('site', ChoiceType::class, [
-        'choices'  => $choices,
-        'required' => false,
-    ])
-    ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
-    ->getForm();
+    $form = $this->createFormBuilder(['site' => null])
+        ->add('site', ChoiceType::class, [
+            'choices'  => $choices,
+            'required' => false,
+        ])
+        ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
+        ->getForm();
 
-   $form->handleRequest($request);
+    $form->handleRequest($request);
 
-if ($form->isSubmitted() && $form->isValid()) {
-    $data = $form->getData();
-    if ($data['site'] !== null) {
-        $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
+    if ($form->isSubmitted() && $form->isValid()) {
+        $data = $form->getData();
+        if ($data['site'] !== null) {
+            $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
+        } else {
+            $sorties = $sortieRepository->findAll();
+        }
     } else {
         $sorties = $sortieRepository->findAll();
     }
-} else {
-    $sorties = $sortieRepository->findAll();
-}
+
+    foreach ($sorties as $sortie) {
+        $organisateur = $userRepository->find($sortie->getOrganisateur());
+        $sortie->setIdOrga($organisateur);
+    }
 
     return $this->render('navigation/list.html.twig', [
             'sorties' => $sorties,
@@ -78,17 +82,16 @@ if ($form->isSubmitted() && $form->isValid()) {
     );
 }
 
-        #[
-        Route('/monProfil', name: '_monProfil')]
-    public function monProfil(User $user): Response
+    #[Route('/monProfil', name: '_monProfil')]
+    public function monProfil(UserInterface $user): Response
     {
         return $this->render('navigation/monProfil.html.twig',
         );
     }
 
-    #[Route('/creerSorti',name:'_creerSorti')]
-    public function creerSorti(User $user, Request $request, EntityManagerInterface $entityManager):Response
-    {
+    #[Route('/creerSortie',name:'_creerSortie')]
+    public function creerSortie(UserInterface $user, Request $request, EntityManagerInterface $entityManager): Response {
+
         $sortie = new Sortie();
         $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
         $sortieFormType->handleRequest($request);
@@ -97,17 +100,19 @@ if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($sortie);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Une sortie a été créer');
-
+            $this->addFlash('success', 'Une sortie a été créée');
             return $this->redirectToRoute('app_sortir_accueil');
         }
-        return $this->render('navigation/creerSorti.html.twig',[
-            "user"=>$user,
-            "sortieFormType"=> $sortieFormType]);
+
+        return $this->render('navigation/creerSortie.html.twig', [
+            "user" => $user,
+            "form" => $sortieFormType->createView()
+        ]);
     }
 
+
     #[Route('/modifierSortie',name:'_modifierSortie')]
-    public function modifierSorti(User $user):Response
+    public function modifierSorti(UserInterface $user):Response
     {
         return $this->render('navigation/creerSortie.html.twig',[
             "user"=>$user
