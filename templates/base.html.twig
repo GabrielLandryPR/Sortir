@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <title>{% block title %}Sortir{% endblock %}</title>
 
-    {% block stylesheets %}
-    {% endblock %}
+
 
     {% block javascripts %}
         {% block importmap %}{{ importmap('app') }}{% endblock %}
+        <script src="{{ asset('js/bootstrap.min.js') }}"></script>
     {% endblock %}
 <body>
 <h1></h1>
@@ -23,4 +23,9 @@
         {% endif %}
     </ul>
 </nav>
+{% block stylesheets %}
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+{% endblock %}
 {% block body %}{% endblock %}
+
+

@@ -23,65 +23,64 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 class HomeController extends AbstractController
 {
 
-#[Route('/list',name:'_list')]
-public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
-{
-    $user = $this->getUser();
+    #[Route('/list', name: '_list')]
+    public function list(Request $request, EntityManagerInterface $em, SortieRepository $sortieRepository, SiteRepository $siteRepository): Response
+    {
+        $user = $this->getUser();
 
-$sites = $siteRepository->findAll();
-$choices = [];
-foreach ($sites as $site) {
-    $choices[$site->getNomSite()] = $site->getId();
-}
-$choices = ["Tous les sites" => null] + $choices;
+        $sites = $siteRepository->findAll();
+        $choices = [];
+        foreach ($sites as $site) {
+            $choices[$site->getNomSite()] = $site->getId();
+        }
+        $choices = ["Tous les sites" => null] + $choices;
 
-$form = $this->createFormBuilder(['site' => null])
-    ->add('site', ChoiceType::class, [
-        'choices'  => $choices,
-        'required' => false,
-    ])
-    ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
-    ->getForm();
+        $form = $this->createFormBuilder(['site' => null])
+            ->add('site', ChoiceType::class, [
+                'choices' => $choices,
+                'required' => false,
+            ])
+            ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
+            ->getForm();
 
-   $form->handleRequest($request);
+        $form->handleRequest($request);
 
-if ($form->isSubmitted() && $form->isValid()) {
-    $data = $form->getData();
-    if ($data['site'] !== null) {
-        $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
-    } else {
-        $sorties = $sortieRepository->findAll();
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            if ($data['site'] !== null) {
+                $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
+            } else {
+                $sorties = $sortieRepository->findAll();
+            }
+        } else {
+            $sorties = $sortieRepository->findAll();
+        }
+
+        return $this->render('navigation/list.html.twig', [
+                'user' => $user,
+                'sorties' => $sorties,
+                'sites' => $sites,
+                'form' => $form->createView(),
+            ]
+        );
     }
-} else {
-    $sorties = $sortieRepository->findAll();
-}
 
-    return $this->render('navigation/list.html.twig', [
-            'user' => $user,
-            'sorties' => $sorties,
-            'sites' => $sites,
-            'form' => $form->createView(),
-        ]
-    );
-}
-
-        #[
+    #[
         Route('/monProfil', name: '_monProfil')]
     public function monProfil(User $user): Response
     {
         $user = $this->getUser();
 
-        return $this->render('navigation/monProfil.html.twig',[
-            'user' => $user
+        return $this->render('navigation/monProfil.html.twig', [
+                'user' => $user
             ]
         );
     }
 
-    #[Route('/creerSortie',name:'_creerSortie')]
-    public function creerSortie(User $user, Request $request, EntityManagerInterface $entityManager):Response
+    #[Route('/creerSortie', name: '_creerSortie')]
+    public function creerSortie(User $user, Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-
         $sortie = new Sortie();
         $sortie->setOrganisateur($user->getId());
         $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
@@ -95,16 +94,16 @@ if ($form->isSubmitted() && $form->isValid()) {
 
             return $this->redirectToRoute('app_sortir_list');
         }
-        return $this->render('navigation/creerSortie.html.twig',[
-            "user"=>$user,
-            "sortieFormType"=> $sortieFormType]);
+        return $this->render('navigation/creerSortie.html.twig', [
+            "user" => $user,
+            "sortieFormType" => $sortieFormType]);
     }
 
-    #[Route('/modifierSortie',name:'_modifierSortie')]
-    public function modifierSorti(User $user):Response
+    #[Route('/modifierSortie', name: '_modifierSortie')]
+    public function modifierSorti(User $user): Response
     {
-        return $this->render('navigation/creerSortie.html.twig',[
-            "user"=>$user
+        return $this->render('navigation/creerSortie.html.twig', [
+            "user" => $user
         ]);
     }
 
@@ -133,72 +132,73 @@ if ($form->isSubmitted() && $form->isValid()) {
         ]);
     }
 
-#[Route('/inscriptionSortie/{id}', name:'_inscriptionSortie')]
-public function inscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
-{
-    $user = $this->getUser();
+    #[Route('/inscriptionSortie/{id}', name: '_inscriptionSortie')]
+    public function inscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
     {
-        {#$sortie = $entityManager->getRepository(Sortie::class)->find($id);#}}
+        $user = $this->getUser();
+        {
+            {#$sortie = $entityManager->getRepository(Sortie::class)->find($id);#}}
 
-            if (!$user) {
-                throw $this->createNotFoundException('utilisateur non trouvée');
+                if (!$user) {
+                    throw $this->createNotFoundException('utilisateur non trouvée');
+                }
+
+                $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+
+                if (!$sortie) {
+                    throw $this->createNotFoundException('Sortie non trouvée');
+                }
+
+                $sortie->addUser($user);
+
+                $entityManager->persist($sortie);
+                $entityManager->flush();
+
+                return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
             }
 
-            $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+        }
+    }
 
-            if (!$sortie) {
-                throw $this->createNotFoundException('Sortie non trouvée');
-            }
+    #[Route('/detailSortie/{id}', name: '_detailSortie')]
+    public function detailSortie(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
 
-            $sortie->addUser($user);
-
-            $entityManager->persist($sortie);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
+        if (!$sortie) {
+            throw $this->createNotFoundException('Sortie non trouvée');
         }
 
-    }
-}
-#[Route('/detailSortie/{id}', name:'_detailSortie')]
-public function detailSortie(int $id, EntityManagerInterface $entityManager): Response
-{
-    $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+        $user = $this->getUser();
 
-    if (!$sortie) {
-        throw $this->createNotFoundException('Sortie non trouvée');
+        return $this->render('navigation/detailSortie.html.twig', [
+            'sortie' => $sortie,
+            'user' => $user,
+        ]);
     }
 
-    $user = $this->getUser();
+    #[Route('/desinscriptionSortie/{id}', name: '_desinscriptionSortie')]
+    public function desinscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
 
-    return $this->render('navigation/detailSortie.html.twig', [
-        'sortie' => $sortie,
-        'user' => $user,
-    ]);
-}
+        if (!$user) {
+            throw $this->createNotFoundException('Utilisateur non trouvé');
+        }
 
-#[Route('/desinscriptionSortie/{id}', name:'_desinscriptionSortie')]
-public function desinscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
-{
-    $user = $this->getUser();
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
 
-    if (!$user) {
-        throw $this->createNotFoundException('Utilisateur non trouvé');
+        if (!$sortie) {
+            throw $this->createNotFoundException('Sortie non trouvée');
+        }
+
+        $sortie->removeUser($user);
+
+        $entityManager->persist($sortie);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
     }
-
-    $sortie = $entityManager->getRepository(Sortie::class)->find($id);
-
-    if (!$sortie) {
-        throw $this->createNotFoundException('Sortie non trouvée');
-    }
-
-    $sortie->removeUser($user);
-
-    $entityManager->persist($sortie);
-    $entityManager->flush();
-
-    return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
-}
 
 
 }
