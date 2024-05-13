@@ -1,5 +1,7 @@
 @import "~bootstrap/dist/css/bootstrap.min.css";
-
+h1{
+ text-align: center;
+}
 body {
     background-color: skyblue;
 }
@@ -15,3 +17,4 @@ td {
 table {
     border: solid 1px;
 }
+

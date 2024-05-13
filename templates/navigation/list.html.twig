@@ -14,18 +14,18 @@
     {{ form_widget(form.submit) }}
 {{ form_end(form) }}
 
+    <form>
+        <input type="checkbox" id="organizer" name="filter" value="organizer">
+        <label for="organizer">Sorties dont je suis l'organisateur/trice</label><br>
+        <input type="checkbox" id="registered" name="filter" value="registered">
+        <label for="registered">Sorties auxquelles je suis inscrit/e</label><br>
+        <input type="checkbox" id="notRegistered" name="filter" value="notRegistered">
+        <label for="notRegistered">Sorties auxquelles je ne suis pas inscrit/e</label><br>
+        <input type="checkbox" id="past" name="filter" value="past">
+        <label for="past">Sorties passées</label><br>
+    </form>
     {% for sortie in sorties %}
 
-        <form>
-  <input type="checkbox" id="organizer" name="filter" value="organizer">
-  <label for="organizer">Sorties dont je suis l'organisateur/trice</label><br>
-  <input type="checkbox" id="registered" name="filter" value="registered">
-  <label for="registered">Sorties auxquelles je suis inscrit/e</label><br>
-  <input type="checkbox" id="notRegistered" name="filter" value="notRegistered">
-  <label for="notRegistered">Sorties auxquelles je ne suis pas inscrit/e</label><br>
-  <input type="checkbox" id="past" name="filter" value="past">
-  <label for="past">Sorties passées</label><br>
-</form>
 
         <table>
             <thead>
