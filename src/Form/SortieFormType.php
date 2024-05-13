@@ -11,6 +11,7 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -39,8 +40,14 @@ class SortieFormType extends AbstractType
                 $sortie = $event->getData();
                 $form = $event->getForm();
 
+                $user = $this->security->getUser();
+                if (!$user) {
+                    // handle unauthenticated user
+                    throw new \Exception('User must be authenticated');
+                }
+
                 if (!$sortie || null === $sortie->getId()) {
-                    $sortie->setOrganisateur($this->security->getUser()->getId());
+                    $sortie->setOrganisateur($user->getId());
                 }
             }
         )
@@ -74,6 +81,10 @@ class SortieFormType extends AbstractType
             ])
             ->add('urlPhoto')
             ->add('organisateur', HiddenType::class)
+            ->add('idOrga', EntityType::class, [
+                'class' => User::class
+            ])
+
             ->add('Users', EntityType::class, [
                 'class' => User::class,
                 'choice_label' => 'pseudo',
