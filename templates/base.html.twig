@@ -15,7 +15,7 @@
 <nav>
     <ul  style="display:flex; flex-direction: row;list-style: none;">
         {% if app.user%}
-            <h1 class="logPseudo">Bienvenue, {{ app.user.pseudo }}!</h1>
+            <h1>Bienvenue, {{ app.user.pseudo }}!</h1>
             <li><a href="{{ path('app_sortir_list') }}">Accueil</a></li>
             <li><a href="{{ path('app_sortir_updateProfil', {'id': user.id}) }}">Mon profil</a></li>
             <li><a href="{{ path('app_sortir_creerSortie') }}">Créer une sortie</a></li>
