@@ -14,18 +14,12 @@
 <h1></h1>
 <nav>
     <ul  style="display:flex; flex-direction: row;list-style: none;">
-        <li><a href="{{ path('app_sortir_accueil') }}">Home</a></li>
-        <li><a href="{{ path('app_register') }}">Création du compte</a></li>
-        <li><a href="{{ path('app_login') }}">Connection</a></li>
-        <li><a href="{{ path('app_sortir_creerSortie') }}">Créer une sortie</a></li>
         {% if app.user%}
-            <li><a href="{{ path('app_sortir_updateProfil', {'id': user.id}) }}">Modifier profil</a></li>g
-        {% endif %}
-        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-            <p>Bienvenue, {{ app.user.pseudo }}!</p>
+            <h1>Bienvenue, {{ app.user.pseudo }}!</h1>
+            <li><a href="{{ path('app_sortir_list') }}">Accueil</a></li>
+            <li><a href="{{ path('app_sortir_updateProfil', {'id': user.id}) }}">Mon profil</a></li>
+            <li><a href="{{ path('app_sortir_creerSortie') }}">Créer une sortie</a></li>
             <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
-        {% else %}
-            <li><a href="{{ path('app_login') }}">Connexion</a></li>
         {% endif %}
     </ul>
 </nav>

@@ -45,7 +45,7 @@ class ConnectionAuthenticator extends AbstractLoginFormAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         // Redirection vers la page d'accueil après la connexion réussie
-        return new RedirectResponse($this->urlGenerator->generate('app_sortir_accueil'));
+        return new RedirectResponse($this->urlGenerator->generate('app_sortir_list'));
     }
 
     protected function getLoginUrl(Request $request): string

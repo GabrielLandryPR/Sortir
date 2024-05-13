@@ -11,11 +11,13 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Event\PreSetDataEvent;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Security;
@@ -32,19 +34,17 @@ class SortieFormType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (PreSetDataEvent $event) use ($builder) {
-            $sortie = $event->getData();
-            $form = $event->getForm();
+        $builder->addEventListener(
+            FormEvents::PRE_SET_DATA,
+            function (FormEvent $event) {
+                $sortie = $event->getData();
+                $form = $event->getForm();
 
-
-            $user = $this->security->getUser();
-
-            if (!$sortie->getId() && $user instanceof User) {
-                // Si la sortie est nouvellement créée et qu'un utilisateur est authentifié
-                // Définir l'utilisateur comme l'organisateur
-                $form->get('organisateur')->setData(true);
+                if (!$sortie || null === $sortie->getId()) {
+                    $sortie->setOrganisateur($this->security->getUser()->getId());
+                }
             }
-        })
+        )
             ->add('nomSortie')
             ->add('dateDebut', DateType::class, [
                 'widget' => 'single_text',
@@ -74,19 +74,13 @@ class SortieFormType extends AbstractType
                 'required' => true,
             ])
             ->add('urlPhoto')
-            ->add('organisateur', EntityType::class,[
-                'class' => User::class,
-                'label' => 'Organisateur',
-            ])
+            ->add('organisateur', HiddenType::class)
             ->add('Users', EntityType::class, [
                 'class' => User::class,
                 'choice_label' => 'pseudo',
                 'multiple' => true,
             ])
-            ->add('idOrga', EntityType::class, [
-                'class' => User::class,
-                'label' => 'idOrga',
-            ])
+
             ->add('noEtat', EntityType::class, [
                 'class' => Etat::class,
                 'label'=> "libelle"
@@ -97,7 +91,8 @@ class SortieFormType extends AbstractType
             ])
             ->add('noSite', EntityType::class, [
                 'class' => Site::class,
-                'label' => 'nomSite',
+                'label' => 'nom de votre Site',
+                'placeholder' => '-- Choisissez un site --',
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'Enregistrer',

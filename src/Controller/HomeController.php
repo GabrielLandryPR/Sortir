@@ -5,12 +5,12 @@ namespace App\Controller;
 use App\Entity\Sortie;
 use App\Entity\User;
 use App\Form\SortieFormType;
-use App\Form\FilterType;
+
 use App\Form\UpdateProfilType;
 use App\Repository\SiteRepository;
 use App\Repository\SortieRepository;
 use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManager;
+
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,77 +23,66 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 class HomeController extends AbstractController
 {
 
-    #[Route('/accueil',name:'_accueil')]
-public function home(Request $request, UserRepository $userRepository, EntityManagerInterface $entityManager): Response
+#[Route('/list',name:'_list')]
+public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
 {
     $user = $this->getUser();
-    if (!$user) {
-        return $this->redirectToRoute('app_login');
-    }
-
-    $id = $user->getId();
-
-    return $this->render('navigation/Accueil.html.twig',[
-        'user' => $user,
-        'id' => $id
-    ]);
+$sites = $siteRepository->findAll();
+$choices = [];
+foreach ($sites as $site) {
+    $choices[$site->getNomSite()] = $site->getId();
 }
+$choices = ["Tous les sites" => null] + $choices;
 
-#[Route('/list',name:'_list')]
-public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository):Response
-{
-   $user = $this->getUser();
-    $sites = $siteRepository->findAll();
-    $choices = [];
-        foreach ($sites as $site) {
-            $choices[$site->getNomSite()] = $site->getId();
-}
-        $choices = ["Tous les sites" => null] + $choices;
-
-        $form = $this->createFormBuilder(['site' => null])
-        ->add('site', ChoiceType::class, [
-            'choices'  => $choices,
-            'required' => false,
-            ])
+$form = $this->createFormBuilder(['site' => null])
+    ->add('site', ChoiceType::class, [
+        'choices'  => $choices,
+        'required' => false,
+    ])
     ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
     ->getForm();
-        $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $data = $form->getData();
-            if ($data['site'] !== null) {
-                $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
-        } else {
-                $sorties = $sortieRepository->findAll();
-        }
+   $form->handleRequest($request);
+
+if ($form->isSubmitted() && $form->isValid()) {
+    $data = $form->getData();
+    if ($data['site'] !== null) {
+        $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
     } else {
         $sorties = $sortieRepository->findAll();
+    }
+} else {
+    $sorties = $sortieRepository->findAll();
 }
 
     return $this->render('navigation/list.html.twig', [
+            'user' => $user,
             'sorties' => $sorties,
             'sites' => $sites,
             'form' => $form->createView(),
-            'user'=> $user
         ]
     );
 }
 
-
-
-    #[Route('/monProfil', name: '_monProfil')]
-    public function monProfil(User $user, UserRepository $userRepository): Response
+        #[
+        Route('/monProfil', name: '_monProfil')]
+    public function monProfil(User $user): Response
     {
         $user = $this->getUser();
+
         return $this->render('navigation/monProfil.html.twig',[
-            'user'=>$user]
+            'user' => $user
+            ]
         );
     }
 
     #[Route('/creerSortie',name:'_creerSortie')]
     public function creerSortie(User $user, Request $request, EntityManagerInterface $entityManager):Response
     {
+        $user = $this->getUser();
+
         $sortie = new Sortie();
+        $sortie->setOrganisateur($user->getId());
         $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
         $sortieFormType->handleRequest($request);
 
@@ -103,7 +92,7 @@ public function list(Request $request,EntityManagerInterface $em,SortieRepositor
 
             $this->addFlash('success', 'Une sortie a été créer');
 
-            return $this->redirectToRoute('app_sortir_accueil');
+            return $this->redirectToRoute('app_sortir_list');
         }
         return $this->render('navigation/creerSortie.html.twig',[
             "user"=>$user,
@@ -122,7 +111,6 @@ public function list(Request $request,EntityManagerInterface $em,SortieRepositor
     public function updateProfil(Request $request, int $id, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-        $user = $entityManager->getRepository(User::class)->find($id);
 
         if (!$user) {
             throw $this->createNotFoundException('Utilisateur non trouvé');
@@ -135,12 +123,12 @@ public function list(Request $request,EntityManagerInterface $em,SortieRepositor
             $entityManager->persist($user);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_sortir_accueil');
+            return $this->redirectToRoute('app_sortir_list');
         }
 
         return $this->render('registration/updateProfil.html.twig', [
             'updateProfilForm' => $updateProfilForm->createView(),
-            "user" => $user
+            'user' => $user
         ]);
     }
 
