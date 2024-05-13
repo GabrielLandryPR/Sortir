@@ -27,6 +27,7 @@ class HomeController extends AbstractController
 public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
 {
     $user = $this->getUser();
+
 $sites = $siteRepository->findAll();
 $choices = [];
 foreach ($sites as $site) {
