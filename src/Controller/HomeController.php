@@ -40,54 +40,58 @@ public function home(Request $request, UserRepository $userRepository, EntityMan
 }
 
 #[Route('/list',name:'_list')]
-public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository):Response
+public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository):Response
 {
-$sites = $siteRepository->findAll();
-$choices = [];
-foreach ($sites as $site) {
-    $choices[$site->getNomSite()] = $site->getId();
+   $user = $this->getUser();
+    $sites = $siteRepository->findAll();
+    $choices = [];
+        foreach ($sites as $site) {
+            $choices[$site->getNomSite()] = $site->getId();
 }
-$choices = ["Tous les sites" => null] + $choices;
+        $choices = ["Tous les sites" => null] + $choices;
 
-$form = $this->createFormBuilder(['site' => null])
-    ->add('site', ChoiceType::class, [
-        'choices'  => $choices,
-        'required' => false,
-    ])
+        $form = $this->createFormBuilder(['site' => null])
+        ->add('site', ChoiceType::class, [
+            'choices'  => $choices,
+            'required' => false,
+            ])
     ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
     ->getForm();
+        $form->handleRequest($request);
 
-   $form->handleRequest($request);
-
-if ($form->isSubmitted() && $form->isValid()) {
-    $data = $form->getData();
-    if ($data['site'] !== null) {
-        $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            if ($data['site'] !== null) {
+                $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
+        } else {
+                $sorties = $sortieRepository->findAll();
+        }
     } else {
         $sorties = $sortieRepository->findAll();
-    }
-} else {
-    $sorties = $sortieRepository->findAll();
 }
 
     return $this->render('navigation/list.html.twig', [
             'sorties' => $sorties,
             'sites' => $sites,
             'form' => $form->createView(),
+            'user'=> $user
         ]
     );
 }
 
-        #[
-        Route('/monProfil', name: '_monProfil')]
-    public function monProfil(User $user): Response
+
+
+    #[Route('/monProfil', name: '_monProfil')]
+    public function monProfil(User $user, UserRepository $userRepository): Response
     {
-        return $this->render('navigation/monProfil.html.twig',
+        $user = $this->getUser();
+        return $this->render('navigation/monProfil.html.twig',[
+            'user'=>$user]
         );
     }
 
-    #[Route('/creerSorti',name:'_creerSorti')]
-    public function creerSorti(User $user, Request $request, EntityManagerInterface $entityManager):Response
+    #[Route('/creerSortie',name:'_creerSortie')]
+    public function creerSortie(User $user, Request $request, EntityManagerInterface $entityManager):Response
     {
         $sortie = new Sortie();
         $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
@@ -101,7 +105,7 @@ if ($form->isSubmitted() && $form->isValid()) {
 
             return $this->redirectToRoute('app_sortir_accueil');
         }
-        return $this->render('navigation/creerSorti.html.twig',[
+        return $this->render('navigation/creerSortie.html.twig',[
             "user"=>$user,
             "sortieFormType"=> $sortieFormType]);
     }
@@ -117,6 +121,7 @@ if ($form->isSubmitted() && $form->isValid()) {
     #[Route('/updateProfil/{id}', name: '_updateProfil')]
     public function updateProfil(Request $request, int $id, EntityManagerInterface $entityManager): Response
     {
+        $user = $this->getUser();
         $user = $entityManager->getRepository(User::class)->find($id);
 
         if (!$user) {
