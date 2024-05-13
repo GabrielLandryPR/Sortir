@@ -80,7 +80,10 @@ if ($form->isSubmitted() && $form->isValid()) {
     #[Route('/creerSortie',name:'_creerSortie')]
     public function creerSortie(User $user, Request $request, EntityManagerInterface $entityManager):Response
     {
+        $user = $this->getUser();
+
         $sortie = new Sortie();
+        $sortie->setOrganisateur($user->getId());
         $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
         $sortieFormType->handleRequest($request);
 
@@ -90,7 +93,7 @@ if ($form->isSubmitted() && $form->isValid()) {
 
             $this->addFlash('success', 'Une sortie a été créer');
 
-            return $this->redirectToRoute('app_sortir_accueil');
+            return $this->redirectToRoute('app_sortir_list');
         }
         return $this->render('navigation/creerSortie.html.twig',[
             "user"=>$user,

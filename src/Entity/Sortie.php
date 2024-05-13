@@ -41,7 +41,7 @@ class Sortie
     private ?string $urlPhoto = null;
 
     #[ORM\Column]
-    private ?int $organisateur = null;
+    private int|null $organisateur = null;
 
 
     /**
@@ -177,7 +177,7 @@ class Sortie
         return $this->organisateur;
     }
 
-    public function setOrganisateur(int $organisateur): static
+    public function setOrganisateur(int $organisateur): self
     {
         $this->organisateur = $organisateur;
 
