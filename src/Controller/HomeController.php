@@ -50,7 +50,7 @@ class HomeController extends AbstractController
         );
     }
 
-    #[Route('/creerSortie', name: '_creerSortie')]
+    #[Route('/createSortie', name: '_createSortie')]
     public function creerSortie(Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
