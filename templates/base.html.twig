@@ -17,12 +17,12 @@
     <ul style="display:flex; flex-direction: row; list-style: none;">
         <li><a href="{{ path('app_register') }}">Création du compte</a></li>
         <li><a href="{{ path('app_login') }}">Connexion</a></li>
-        <li><a href="{{ path('app_sortir_creerSortie') }}">Créer une sortie</a></li>
+        <li><a href="{{ path('app_sortir_createSortie') }}">Créer une sortie</a></li>
         {% if app.user %}
             <h1>Bienvenue, {{ app.user.pseudo }}!</h1>
             <li><a href="{{ path('app_sortir_list') }}">Accueil</a></li>
             <li><a href="{{ path('app_sortir_updateProfil', {'id': app.user.id}) }}">Mon profil</a></li>
-            <li><a href="{{ path('app_sortir_creerSortie') }}">Créer une sortie</a></li>
+            <li><a href="{{ path('app_sortir_createSortie') }}">Créer une sortie</a></li>
             <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
         {% else %}
             <li><a href="{{ path('app_login') }}">Connexion</a></li>
