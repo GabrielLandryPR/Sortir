@@ -19,8 +19,15 @@ class UpdateProfilType extends AbstractType
             ->add('prenom')
             ->add('tel')
             ->add('email')
+            ->add('pseudo')
             ->add('password', RepeatedType::class, [
                 'type' => PasswordType::class,
+                'first_options' => [
+                    'label' => 'Mot de passe',
+                ],
+                'second_options' => [
+                    'label' => 'Confirmer le mot de passe',
+                ],
                 'options' => [
                     'attr' => [
                         'autocomplete' => 'new-password',

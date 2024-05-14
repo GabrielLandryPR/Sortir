@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +23,7 @@ class ConnectionAuthenticator extends AbstractLoginFormAuthenticator
 
     public const LOGIN_ROUTE = 'app_login';
 
-    public function __construct(private UrlGeneratorInterface $urlGenerator)
+    public function __construct(private UrlGeneratorInterface $urlGenerator, private UserRepository $userRepository)
     {
     }
 
