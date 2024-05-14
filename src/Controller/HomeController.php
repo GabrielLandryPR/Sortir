@@ -108,7 +108,7 @@ class HomeController extends AbstractController
             return $this->redirectToRoute('app_sortir_list');
         }
 
-        return $this->render('navigation/creerSortie.html.twig', [
+        return $this->render('navigation/createSortie.html.twig', [
             "user" => $user,
             "sortieFormType" => $sortieFormType->createView()
         ]);
@@ -117,7 +117,7 @@ class HomeController extends AbstractController
     #[Route('/modifierSortie', name: '_modifierSortie')]
     public function modifierSorti(User $user): Response
     {
-        return $this->render('navigation/creerSortie.html.twig', [
+        return $this->render('navigation/createSortie.html.twig', [
             "user" => $user
         ]);
     }
