@@ -7,9 +7,18 @@
     {{ form_widget(sortieFormType) }}
     {{ form_end(sortieFormType) }}
 
+    <div id="map" style="height: 400px;"></div>
+
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="{{ asset('js/duree.js') }}"></script>
+    <script src="{{ asset('js/lieu.js') }}"></script>
+    <script src="{{ asset('js/map.js') }}"></script>
+    <script src="{{ asset('js/autocomplete.js') }}"></script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('CSS/CityCss.css') }}">
 {% endblock %}

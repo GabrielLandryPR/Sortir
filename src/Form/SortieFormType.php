@@ -2,20 +2,15 @@
 
 namespace App\Form;
 
-use App\Entity\Etat;
-use App\Entity\Lieu;
-use App\Entity\Site;
 use App\Entity\Sortie;
-use App\Entity\User;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Event\PreSetDataEvent;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -31,37 +26,39 @@ class SortieFormType extends AbstractType
         $this->security = $security;
     }
 
-
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(
             FormEvents::PRE_SET_DATA,
             function (FormEvent $event) {
                 $sortie = $event->getData();
-                $form = $event->getForm();
-
                 $user = $this->security->getUser();
-                if (!$user) {
-                    // handle unauthenticated user
-                    throw new \Exception('User must be authenticated');
-                }
 
-                if (!$sortie || null === $sortie->getId()) {
+                if ($user && $sortie) {
+                    $sortie->setNoSite($user->getNoSite());
                     $sortie->setOrganisateur($user->getId());
                 }
             }
-        )
-            ->add('nomSortie')
-            ->add('dateDebut', DateType::class, [
-                'widget' => 'single_text',
-                'label' => 'date et heure de début'
+        );
+
+        $builder
+            ->add('nomSortie', TextType::class, [
+                'label' => 'Nom de la sortie',
             ])
-            ->add('duree')
-            ->add('dateFin', DateType::class, [
+            ->add('dateDebut', DateTimeType::class, [
                 'widget' => 'single_text',
-                'label' => "Date limite d'inscription"
+                'label' => 'Date et heure de début',
             ])
-            ->add('nbInscriptionMax')
+            ->add('duree', IntegerType::class, [
+                'label' => 'Durée (en minutes)',
+            ])
+            ->add('dateFin', DateTimeType::class, [
+                'widget' => 'single_text',
+                'label' => "Date limite d'inscription",
+            ])
+            ->add('nbInscriptionMax', IntegerType::class, [
+                'label' => "Nombre d'inscriptions max",
+            ])
             ->add('description', TextareaType::class, [
                 'label' => 'Description',
                 'required' => true,
@@ -69,48 +66,41 @@ class SortieFormType extends AbstractType
                     'rows' => 5,
                 ],
             ])
-            ->add('etatSortie', ChoiceType::class, [
-                'label' => 'État de la sortie',
-                'choices' => [
-                    'En cours' => '1',
-                    'Termine' => '2',
-                    'Annule' => '3',
-                ],
-                'placeholder' => '-- Choisissez un état --',
-                'required' => true,
+            ->add('urlPhoto', FileType::class, [
+                'label' => 'Photo',
+                'required' => false,
+                'mapped' => false,
             ])
-            ->add('urlPhoto')
+            ->add('lieuSearch', TextType::class, [
+                'label' => 'Rechercher un lieu',
+                'mapped' => false,
+                'attr' => ['class' => 'autocomplete']
+            ])
+            ->add('rue', TextType::class, [
+                'label' => 'Rue',
+                'mapped' => false,
+            ])
+            ->add('codePostal', TextType::class, [
+                'label' => 'Code Postal',
+                'mapped' => false,
+            ])
+            ->add('ville', TextType::class, [
+                'label' => 'Ville',
+                'mapped' => false,
+            ])
+            ->add('latitude', HiddenType::class, [
+                'mapped' => false,
+            ])
+            ->add('longitude', HiddenType::class, [
+                'mapped' => false,
+            ])
             ->add('organisateur', HiddenType::class)
-            ->add('idOrga', EntityType::class, [
-                'class' => User::class
-            ])
-
-            ->add('Users', EntityType::class, [
-                'class' => User::class,
-                'choice_label' => 'pseudo',
-                'multiple' => true,
-            ])
-
-            ->add('noEtat', EntityType::class, [
-                'class' => Etat::class,
-                'label'=> "libelle"
-            ])
-            ->add('noLieu', EntityType::class, [
-                'class' => Lieu::class,
-                'label' => 'id',
-            ])
-            ->add('noSite', EntityType::class, [
-                'class' => Site::class,
-                'label' => 'nom de votre Site',
-                'placeholder' => '-- Choisissez un site --',
-            ])
             ->add('submit', SubmitType::class, [
                 'label' => 'Enregistrer',
                 'attr' => [
                     'class' => 'btn btn-primary',
                 ]
-            ])
-        ;
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

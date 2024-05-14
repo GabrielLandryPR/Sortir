@@ -5,26 +5,23 @@
     <title>{% block title %}Sortir{% endblock %}</title>
 
     {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
+        {{ encore_entry_link_tags('app') }}
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <link rel="stylesheet" href="{{ asset('CSS/CityCss.css') }}">
     {% endblock %}
-
-    {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
-        {% block importmap %}{{ importmap('app') }}{% endblock %}
-        <script src="{{ asset('js/bootstrap.min.js') }}"></script>
-    {% endblock %}
+</head>
 <body>
 <h1></h1>
 <nav>
-    <ul  style="display:flex; flex-direction: row;list-style: none;">
-        <li><a href="{{ path('app_sortir_accueil') }}">Home</a></li>
+    <ul style="display:flex; flex-direction: row; list-style: none;">
         <li><a href="{{ path('app_register') }}">Création du compte</a></li>
-        <li><a href="{{ path('app_login') }}">Connection</a></li>
+        <li><a href="{{ path('app_login') }}">Connexion</a></li>
         <li><a href="{{ path('app_sortir_creerSortie') }}">Créer une sortie</a></li>
-        {% if app.user%}
+        {% if app.user %}
             <h1>Bienvenue, {{ app.user.pseudo }}!</h1>
             <li><a href="{{ path('app_sortir_list') }}">Accueil</a></li>
-            <li><a href="{{ path('app_sortir_updateProfil', {'id': user.id}) }}">Mon profil</a></li>
+            <li><a href="{{ path('app_sortir_updateProfil', {'id': app.user.id}) }}">Mon profil</a></li>
             <li><a href="{{ path('app_sortir_creerSortie') }}">Créer une sortie</a></li>
             <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
         {% else %}
@@ -32,9 +29,17 @@
         {% endif %}
     </ul>
 </nav>
-{% block stylesheets %}
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
-{% endblock %}
+
 {% block body %}{% endblock %}
 
-
+{% block javascripts %}
+    {{ encore_entry_script_tags('app') }}
+    {% block importmap %}{{ importmap('app') }}{% endblock %}
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="{{ asset('js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('js/lieu.js') }}"></script>
+    <script src="{{ asset('js/map.js') }}"></script>
+    <script src="{{ asset('js/autocomplete.js') }}"></script>
+{% endblock %}
+</body>
+</html>

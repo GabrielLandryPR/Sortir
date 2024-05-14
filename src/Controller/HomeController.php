@@ -15,18 +15,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
 {
-
-
-
-
-
     #[Route('/list', name: '_list')]
     public function list(Request $request, SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository): Response
     {
@@ -59,25 +51,67 @@ class HomeController extends AbstractController
     }
 
     #[Route('/creerSortie', name: '_creerSortie')]
-    public function creerSortie(User $user, Request $request, EntityManagerInterface $entityManager): Response
+    public function creerSortie(Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
         $sortie = new Sortie();
         $sortie->setOrganisateur($user->getId());
+        $sortie->setNoSite($user->getNoSite());
+        $sortie->addUser($user);
+
         $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
         $sortieFormType->handleRequest($request);
 
         if ($sortieFormType->isSubmitted() && $sortieFormType->isValid()) {
+            $file = $sortieFormType->get('urlPhoto')->getData();
+            if ($file) {
+                $fileName = uniqid() . '.' . $file->guessExtension();
+                $file->move($this->getParameter('photos_directory'), $fileName);
+                $sortie->setUrlPhoto($fileName);
+            }
+
+            $nomLieu = $sortieFormType->get('lieuSearch')->getData();
+            $latitude = $sortieFormType->get('latitude')->getData();
+            $longitude = $sortieFormType->get('longitude')->getData();
+            $street = $sortieFormType->get('rue')->getData();
+            $postalCode = $sortieFormType->get('codePostal')->getData();
+            $nomVille = $sortieFormType->get('ville')->getData();
+
+            $ville = $entityManager->getRepository(Ville::class)->findOneBy([
+                'nomVille' => $nomVille,
+                'codePostal' => $postalCode
+            ]);
+
+            if (!$ville) {
+                $ville = new Ville();
+                $ville->setNomVille($nomVille);
+                $ville->setCodePostal($postalCode);
+                $entityManager->persist($ville);
+                $entityManager->flush();
+            }
+
+            $lieu = new Lieu();
+            $lieu->setNomLieu($nomLieu);
+            $lieu->setLatitude($latitude);
+            $lieu->setLongitude($longitude);
+            $lieu->setRue($street);
+            $lieu->setNoVille($ville);
+
+            $entityManager->persist($lieu);
+
+            $sortie->setNoLieu($lieu);
             $entityManager->persist($sortie);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Une sortie a été créer');
+            $this->addFlash('success', 'Une sortie a été créée');
 
             return $this->redirectToRoute('app_sortir_list');
         }
+
         return $this->render('navigation/creerSortie.html.twig', [
             "user" => $user,
-            "sortieFormType" => $sortieFormType]);
+            "sortieFormType" => $sortieFormType->createView()
+        ]);
     }
 
     #[Route('/modifierSortie', name: '_modifierSortie')]
