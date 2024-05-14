@@ -23,6 +23,30 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
 {
+
+    #[Route('/annulerSortie/{id}', name: '_annulerSortie')]
+    public function annulerSortie(int $id, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
+    {
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+
+        if (!$sortie) {
+            throw $this->createNotFoundException('Sortie non trouvée');
+        }
+
+
+        $etatAnnule = $etatRepository->find(2);
+
+        if (!$etatAnnule) {
+            throw $this->createNotFoundException('Etat non trouvé');
+        }
+        $sortie->setNoEtat($etatAnnule);
+
+        $entityManager->persist($sortie);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('app_sortir_list');
+    }
+
     #[Route('/list', name: '_list')]
     public function list(Request $request, SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository): Response
     {

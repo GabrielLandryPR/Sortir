@@ -29,12 +29,16 @@ class ConnectionAuthenticator extends AbstractLoginFormAuthenticator
 
     public function authenticate(Request $request): Passport
     {
-        $email = $request->getPayload()->getString('email');
+        $login = $request->getPayload()->getString('login');
+        $user = $this->userRepository->findOneByEmailOrPseudo($login);
 
-        $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $email);
+        if ($user === null) {
+            throw new \Exception('email ou login non trouvé !');
+        }
+        $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $login);
 
         return new Passport(
-            new UserBadge($email),
+            new UserBadge($user->getEmail()),
             new PasswordCredentials($request->getPayload()->getString('password')),
             [
                 new CsrfTokenBadge('authenticate', $request->getPayload()->getString('_csrf_token')),
