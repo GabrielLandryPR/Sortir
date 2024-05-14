@@ -1,26 +1,24 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const dureeInput = document.getElementById('SortieFormType_duree');
-
-    document.addEventListener('DOMContentLoaded', () => {
-    const dureeInput = document.getElementById('sortie_form_type_duree');
-    const dureeDisplay = document.getElementById('dureeDisplay');
+cument.addEventListener('DOMContentLoaded', (event) => {
+    const dureeInput = document.querySelector('#sortie_duree');
+    const dureeDisplay = document.createElement('p');
+    dureeInput.parentNode.appendChild(dureeDisplay);
 
     dureeInput.addEventListener('input', () => {
         const duree = parseInt(dureeInput.value, 10);
-        if (!isNaN(duree) && duree >= 60) {
+        if (duree >= 60) {
             const days = Math.floor(duree / 1440);
             const hours = Math.floor((duree % 1440) / 60);
             const minutes = duree % 60;
 
             let displayText = '';
             if (days > 0) {
-                displayText += `${days} jour(s) `;
+                displayText += `${days} jours `;
             }
-            if (hours > 0) {
-                displayText += `${hours} heure(s) `;
+            if (hours > 0 || days > 0) {
+                displayText += `${hours} heures `;
             }
             if (minutes > 0) {
-                displayText += `${minutes} minute(s)`;
+                displayText += `${minutes} minutes`;
             }
 
             dureeDisplay.textContent = displayText;
@@ -28,5 +26,4 @@ document.addEventListener('DOMContentLoaded', () => {
             dureeDisplay.textContent = '';
         }
     });
-});
 });

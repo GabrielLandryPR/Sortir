@@ -38,49 +38,25 @@ public function home(Request $request, UserRepository $userRepository, EntityMan
     ]);
 }
 
-#[Route('/list',name:'_list')]
-public function list(Request $request,EntityManagerInterface $em,SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository):Response
-{
-    $sites = $siteRepository->findAll();
-    $choices = [];
-    foreach ($sites as $site) {
-        $choices[$site->getNomSite()] = $site->getId();
-    }
-    $choices = ["Tous les sites" => null] + $choices;
+    #[Route('/list', name: '_list')]
+    public function list(Request $request, SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository): Response
+    {
+        $sites = $siteRepository->findAll();
 
-    $form = $this->createFormBuilder(['site' => null])
-        ->add('site', ChoiceType::class, [
-            'choices'  => $choices,
-            'required' => false,
-        ])
-        ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
-        ->getForm();
-
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        $data = $form->getData();
-        if ($data['site'] !== null) {
-            $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
-        } else {
-            $sorties = $sortieRepository->findAll();
-        }
-    } else {
         $sorties = $sortieRepository->findAll();
-    }
 
-    foreach ($sorties as $sortie) {
-        $organisateur = $userRepository->find($sortie->getOrganisateur());
-        $sortie->setIdOrga($organisateur);
-    }
+        foreach ($sorties as $sortie) {
+            $organisateur = $userRepository->find($sortie->getOrganisateur());
+            $sortie->setIdOrga($organisateur);
+        }
 
-    return $this->render('navigation/list.html.twig', [
+        return $this->render('navigation/list.html.twig', [
             'sorties' => $sorties,
-            'sites' => $sites,
-            'form' => $form->createView(),
-        ]
-    );
-}
+            'sites' => $sites
+        ]);
+    }
+
+
 
     #[Route('/monProfil', name: '_monProfil')]
     public function monProfil(UserInterface $user): Response
@@ -211,6 +187,72 @@ public function desinscriptionSortie(int $id, EntityManagerInterface $entityMana
     return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
 }
 
+    #[Route('/filter_sorties', name: 'filter_sorties')]
+    public function filterSorties(Request $request, SortieRepository $sortieRepository): Response
+    {
+        $user = $this->getUser();
+        $organizer = $request->query->get('organizer') === '1' ? $user : null;
+        $registered = $request->query->get('registered') === '1' ? $user : null;
+        $notRegistered = $request->query->get('notRegistered') === '1' ? $user : null;
+        $past = $request->query->get('past') === '1' ? true : false;
+        $site = $request->query->get('site');
+        $startDate = $request->query->get('startDate') ? new \DateTime($request->query->get('startDate')) : null;
+        $endDate = $request->query->get('endDate') ? new \DateTime($request->query->get('endDate')) : null;
+        $searchName = $request->query->get('searchName');
 
+        // Validate end date
+        if ($endDate && $startDate && $endDate < $startDate) {
+            return $this->json(['error' => "La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'."], Response::HTTP_BAD_REQUEST);
+        }
+
+        $sorties = $sortieRepository->findFilteredSorties(
+            $organizer,
+            $registered,
+            $notRegistered,
+            $past,
+            $site,
+            $startDate ? $startDate->format('Y-m-d H:i:s') : null,
+            $endDate ? $endDate->format('Y-m-d H:i:s') : null,
+            $searchName
+        );
+
+        return $this->json([
+            'sorties' => array_map(function ($sortie) {
+                return [
+                    'nomSortie' => $sortie->getNomSortie(),
+                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
+                    'etatSortie' => $sortie->getNoEtat()->getLibelle(),
+                    'dateFin' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
+                    'description' => $sortie->getDescription(),
+                    'organisateur' => $sortie->getIdOrga()->getPseudo()
+                ];
+            }, $sorties)
+        ]);
+    }
+
+
+    #[Route('/filter_by_site', name: 'filter_by_site', methods: ['POST'])]
+    public function filterBySite(Request $request, SortieRepository $sortieRepository): Response
+    {
+        $siteId = $request->request->get('siteId');
+        if ($siteId) {
+            $sorties = $sortieRepository->findBy(['noSite' => $siteId]);
+        } else {
+            $sorties = $sortieRepository->findAll();
+        }
+
+        return $this->json([
+            'sorties' => array_map(function ($sortie) {
+                return [
+                    'nomSortie' => $sortie->getNomSortie(),
+                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
+                    'etatSortie' => $sortie->getNoEtat()->getLibelle(),
+                    'dateFin' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
+                    'description' => $sortie->getDescription(),
+                    'organisateur' => $sortie->getIdOrga()->getPseudo()
+                ];
+            }, $sorties)
+        ]);
+    }
 }
 

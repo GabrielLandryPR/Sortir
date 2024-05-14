@@ -6,13 +6,14 @@
 
 {% block body %}
     <h1>Liste des sorties</h1>
-
     <h2>Filtrer les sorties :</h2>
 
-    {{ form_start(form) }}
-    {{ form_widget(form.site) }}
-    {{ form_widget(form.submit) }}
-    {{ form_end(form) }}
+    <select id="siteSelect">
+        <option value="">Tous les sites</option>
+        {% for site in sites %}
+            <option value="{{ site.id }}">{{ site.nomSite }}</option>
+        {% endfor %}
+    </select>
 
     <form>
         <input type="checkbox" id="organizer" name="filter" value="organizer">
@@ -23,41 +24,51 @@
         <label for="notRegistered">Sorties auxquelles je ne suis pas inscrit/e</label><br>
         <input type="checkbox" id="past" name="filter" value="past">
         <label for="past">Sorties passées</label><br>
+
+        <label for="startDate">Comprise entre :</label>
+        <input type="date" id="startDate" name="startDate">
+        <button type="button" id="resetDateButton">Réinitialiser les dates</button><br>
+        <label for="endDate">Et :</label>
+        <input type="date" id="endDate" name="endDate"><br>
+
+        <label for="searchName">Nom de la sortie :</label>
+        <div style="position: relative; display: inline-block;">
+            <input type="text" id="searchName" name="searchName" style="padding-right: 24px;">
+            <span id="clearSearch" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">&times;</span>
+        </div>
+
+        <button type="button" id="resetButton" style="display: none;">Réinitialiser</button>
     </form>
 
-    {% for sortie in sorties %}
-
-        <table>
+    <div id="sortiesContainer">
+        <table id="sortiesTable">
             <thead>
             <tr>
                 <th>Nom sortie</th>
                 <th>Date début</th>
-                <th>Etat sortie</th>
+                <th>État sortie</th>
                 <th>Date fin</th>
                 <th>Description</th>
                 <th>Organisateur</th>
-                <th>Photo</th>
             </tr>
             </thead>
-            <tbody>
-            <tr>
-                <td>{{ sortie.nomSortie }}</td>
-                <td>{{ sortie.dateDebut|date('Y-m-d H:i:s') }}</td>
-                <td>{{ sortie.etatSortie }}</td>
-                <td>{{ sortie.dateFin|date('Y-m-d H:i:s') }}</td>
-                <td>{{ sortie.description }}</td>
-                <td>
-                    {% if sortie.idOrga.pseudo %}
-                        {{ sortie.idOrga.pseudo }}
-                    {% else %}
-                        {{ sortie.idOrga.prenom }} {{ sortie.idOrga.nom }}
-                    {% endif %}
-                </td>
-                {% if sortie.urlPhoto %}
-                    <td>{{ sortie.urlPhoto }}</td>
-                {% endif %}
-            </tr>
+            <tbody id="sortiesBody">
+            {% for sortie in sorties %}
+                <tr>
+                    <td>{{ sortie.nomSortie }}</td>
+                    <td>{{ sortie.dateDebut|date('Y-m-d H:i:s') }}</td>
+                    <td>{{ sortie.noEtat.libelle }}</td>
+                    <td>{{ sortie.dateFin|date('Y-m-d H:i:s') }}</td>
+                    <td>{{ sortie.description }}</td>
+                    <td>{{ sortie.idOrga.pseudo ? sortie.idOrga.pseudo : sortie.idOrga.prenom ~ ' ' ~ sortie.idOrga.nom }}</td>
+                </tr>
+            {% endfor %}
             </tbody>
         </table>
-    {% endfor %}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/sortieFilter.js') }}"></script>
 {% endblock %}
