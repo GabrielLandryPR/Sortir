@@ -15,6 +15,9 @@ class UpdateProfilType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('nom')
+            ->add('prenom')
+            ->add('tel')
             ->add('email')
             ->add('password', RepeatedType::class, [
                 'type' => PasswordType::class,
@@ -23,6 +26,15 @@ class UpdateProfilType extends AbstractType
                         'autocomplete' => 'new-password',
                     ],
                 ]])
+            ->add('noSite', null, [
+                'label' => 'Site de ratachement',
+            ])
+            ->add('submit', SubmitType::class, [
+                'label' => 'Enregistrer',
+                'attr' => [
+                    'class' => 'btn btn-primary',
+                ],
+            ])
        ;
     }
 

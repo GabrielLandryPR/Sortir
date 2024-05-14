@@ -15,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -22,6 +23,10 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
 {
+
+
+
+
 
     #[Route('/list', name: '_list')]
     public function list(Request $request, EntityManagerInterface $em, SortieRepository $sortieRepository, SiteRepository $siteRepository): Response
@@ -108,7 +113,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/updateProfil/{id}', name: '_updateProfil')]
-    public function updateProfil(Request $request, int $id, EntityManagerInterface $entityManager): Response
+    public function updateProfil(Request $request, int $id, UserPasswordHasherInterface $userPasswordHasher,EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
 
@@ -120,6 +125,12 @@ class HomeController extends AbstractController
         $updateProfilForm->handleRequest($request);
 
         if ($updateProfilForm->isSubmitted() && $updateProfilForm->isValid()) {
+            $user->setPassword(
+                $userPasswordHasher->hashPassword(
+                    $user,
+                    $updateProfilForm->get('password')->getData()
+                )
+            );
             $entityManager->persist($user);
             $entityManager->flush();
 
