@@ -5,12 +5,10 @@ namespace App\Controller;
 use App\Entity\Sortie;
 use App\Entity\User;
 use App\Form\SortieFormType;
-
 use App\Form\UpdateProfilType;
 use App\Repository\SiteRepository;
 use App\Repository\SortieRepository;
 use App\Repository\UserRepository;
-
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +17,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
@@ -29,49 +28,26 @@ class HomeController extends AbstractController
 
 
     #[Route('/list', name: '_list')]
-    public function list(Request $request, EntityManagerInterface $em, SortieRepository $sortieRepository, SiteRepository $siteRepository): Response
+    public function list(Request $request, SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository): Response
     {
-        $user = $this->getUser();
-
         $sites = $siteRepository->findAll();
-        $choices = [];
-        foreach ($sites as $site) {
-            $choices[$site->getNomSite()] = $site->getId();
-        }
-        $choices = ["Tous les sites" => null] + $choices;
 
-        $form = $this->createFormBuilder(['site' => null])
-            ->add('site', ChoiceType::class, [
-                'choices' => $choices,
-                'required' => false,
-            ])
-            ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
-            ->getForm();
+        $sorties = $sortieRepository->findAll();
 
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $data = $form->getData();
-            if ($data['site'] !== null) {
-                $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
-            } else {
-                $sorties = $sortieRepository->findAll();
-            }
-        } else {
-            $sorties = $sortieRepository->findAll();
+        foreach ($sorties as $sortie) {
+            $organisateur = $userRepository->find($sortie->getOrganisateur());
+            $sortie->setIdOrga($organisateur);
         }
 
         return $this->render('navigation/list.html.twig', [
-                'user' => $user,
-                'sorties' => $sorties,
-                'sites' => $sites,
-                'form' => $form->createView(),
-            ]
-        );
+            'sorties' => $sorties,
+            'sites' => $sites
+        ]);
     }
 
-    #[
-        Route('/monProfil', name: '_monProfil')]
+
+
+    #[Route('/monProfil', name: '_monProfil')]
     public function monProfil(User $user): Response
     {
         $user = $this->getUser();
@@ -211,6 +187,72 @@ class HomeController extends AbstractController
         return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
     }
 
+    #[Route('/filter_sorties', name: 'filter_sorties')]
+    public function filterSorties(Request $request, SortieRepository $sortieRepository): Response
+    {
+        $user = $this->getUser();
+        $organizer = $request->query->get('organizer') === '1' ? $user : null;
+        $registered = $request->query->get('registered') === '1' ? $user : null;
+        $notRegistered = $request->query->get('notRegistered') === '1' ? $user : null;
+        $past = $request->query->get('past') === '1' ? true : false;
+        $site = $request->query->get('site');
+        $startDate = $request->query->get('startDate') ? new \DateTime($request->query->get('startDate')) : null;
+        $endDate = $request->query->get('endDate') ? new \DateTime($request->query->get('endDate')) : null;
+        $searchName = $request->query->get('searchName');
 
+        // Validate end date
+        if ($endDate && $startDate && $endDate < $startDate) {
+            return $this->json(['error' => "La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'."], Response::HTTP_BAD_REQUEST);
+        }
+
+        $sorties = $sortieRepository->findFilteredSorties(
+            $organizer,
+            $registered,
+            $notRegistered,
+            $past,
+            $site,
+            $startDate ? $startDate->format('Y-m-d H:i:s') : null,
+            $endDate ? $endDate->format('Y-m-d H:i:s') : null,
+            $searchName
+        );
+
+        return $this->json([
+            'sorties' => array_map(function ($sortie) {
+                return [
+                    'nomSortie' => $sortie->getNomSortie(),
+                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
+                    'etatSortie' => $sortie->getNoEtat()->getLibelle(),
+                    'dateFin' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
+                    'description' => $sortie->getDescription(),
+                    'organisateur' => $sortie->getIdOrga()->getPseudo()
+                ];
+            }, $sorties)
+        ]);
+    }
+
+
+    #[Route('/filter_by_site', name: 'filter_by_site', methods: ['POST'])]
+    public function filterBySite(Request $request, SortieRepository $sortieRepository): Response
+    {
+        $siteId = $request->request->get('siteId');
+        if ($siteId) {
+            $sorties = $sortieRepository->findBy(['noSite' => $siteId]);
+        } else {
+            $sorties = $sortieRepository->findAll();
+        }
+
+        return $this->json([
+            'sorties' => array_map(function ($sortie) {
+                return [
+                    'nomSortie' => $sortie->getNomSortie(),
+                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
+                    'etatSortie' => $sortie->getNoEtat()->getLibelle(),
+                    'dateFin' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
+                    'description' => $sortie->getDescription(),
+                    'organisateur' => $sortie->getIdOrga()->getPseudo()
+                ];
+            }, $sorties)
+        ]);
+    }
 }
 

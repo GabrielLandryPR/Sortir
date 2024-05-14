@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', (event) => {
+cument.addEventListener('DOMContentLoaded', (event) => {
     const dureeInput = document.querySelector('#sortie_duree');
     const dureeDisplay = document.createElement('p');
     dureeInput.parentNode.appendChild(dureeDisplay);
