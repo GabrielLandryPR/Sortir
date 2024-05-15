@@ -12,9 +12,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PSEUDO', fields: ['pseudo'])]  // A vérifier !!!!!!!!!!!!!!!!!!!!
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
+#[UniqueEntity(fields: ['pseudo'], message: 'There is already an account with this pseudo')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -25,15 +24,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
-    /**
-     * @var list<string> The user roles
-     */
     #[ORM\Column]
     private array $roles = [];
 
-    /**
-     * @var string The hashed password
-     */
     #[ORM\Column]
     private ?string $password = null;
 
@@ -52,10 +45,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?bool $actif = null;
 
-
     #[ORM\Column(length: 25)]
     private ?string $pseudo = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $urlPhoto = null;
 
     /**
      * @var Collection<int, Sortie>
@@ -114,7 +108,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
@@ -123,7 +116,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @param list<string> $roles
      */
-
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
@@ -215,18 +207,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function isOrganisateur(): ?bool
-    {
-        return $this->organisateur;
-    }
-
-    public function setOrganisateur(bool $organisateur): static
-    {
-        $this->organisateur = $organisateur;
-
-        return $this;
-    }
-
     public function getPseudo(): ?string
     {
         return $this->pseudo;
@@ -239,6 +219,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getUrlPhoto(): ?string
+    {
+        return $this->urlPhoto;
+    }
+
+    public function setUrlPhoto(?string $urlPhoto): static
+    {
+        $this->urlPhoto = $urlPhoto;
+
+        return $this;
+    }
+
+    public function deletePhoto(): void
+    {
+        if ($this->urlPhoto && file_exists('uploads/photos/' . $this->urlPhoto)) {
+            unlink('uploads/photos/' . $this->urlPhoto);
+            $this->urlPhoto = null;
+        }
+    }
 
     /**
      * @return Collection<int, Sortie>
@@ -313,6 +312,4 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->pseudo;
     }
-
-
 }

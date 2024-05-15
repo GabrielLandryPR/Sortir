@@ -8,6 +8,11 @@
     <div class="container mt-5">
         <h1>Mon profil</h1>
         {% if app.user %}
+            {% if app.user.urlPhoto %}
+                <div class="mb-3">
+                    <img src="{{ asset('uploads/photos/' ~ app.user.urlPhoto) }}" alt="Photo de profil" class="profile-image">
+                </div>
+            {% endif %}
             <div class="form-group">
                 <label>Pseudo</label>
                 <input type="text" class="form-control" value="{{ app.user.pseudo }}" readonly>
@@ -33,6 +38,22 @@
                 <input type="text" class="form-control" value="{{ app.user.noSite.nomSite }}" readonly>
             </div>
             <a href="{{ path('app_sortir_updateProfil', {'id': app.user.id}) }}" class="btn btn-primary">Modifier profil</a>
+
+            <h2 class="mt-5">Sorties créées</h2>
+            {% if sorties is not empty %}
+                <ul class="list-group">
+                    {% for sortie in sorties %}
+                        <li class="list-group-item">
+                            <h5>{{ sortie.nomSortie }}</h5>
+                            <p><strong>Date:</strong> {{ sortie.dateDebut|date('d/m/Y H:i') }}</p>
+                            <p><strong>Lieu:</strong> {{ sortie.noLieu.nomLieu }}</p>
+                            <a href="{{ path('app_sortir_detailSortie', {'id': sortie.id}) }}" class="btn btn-info">Voir les détails</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Vous n'avez créé aucune sortie.</p>
+            {% endif %}
         {% else %}
             <p>Vous devez être connecté pour voir cette page.</p>
         {% endif %}

@@ -4,7 +4,7 @@
 
 {% block body %}
     <div class="container mt-5">
-        <h1>Modifier profil</h1>
+        <h1>Modifier le profil de {{ user.pseudo }}</h1>
 
         {{ form_start(updateProfilForm) }}
 
@@ -31,6 +31,14 @@
         <div class="form-group">
             {{ form_label(updateProfilForm.noSite) }}
             {{ form_widget(updateProfilForm.noSite) }}
+        </div>
+        <div class="form-group">
+            {{ form_label(updateProfilForm.urlPhoto) }}
+            {{ form_widget(updateProfilForm.urlPhoto) }}
+        </div>
+        <div class="form-group">
+            {{ form_widget(updateProfilForm.delete_image) }}
+            {{ form_label(updateProfilForm.delete_image) }}
         </div>
         {% if updateProfilForm.plainPassword is defined %}
             <div class="form-group">

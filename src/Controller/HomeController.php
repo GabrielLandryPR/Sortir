@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
@@ -41,7 +42,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/monProfil', name: '_monProfil')]
-    public function monProfil(): Response
+    public function monProfil(SortieRepository $sortieRepository): Response
     {
         $user = $this->getUser();
 
@@ -49,13 +50,17 @@ class HomeController extends AbstractController
             throw $this->createNotFoundException('Utilisateur non trouvé');
         }
 
+        // Récupérer les sorties créées par l'utilisateur
+        $sorties = $sortieRepository->findBy(['idOrga' => $user]);
+
         return $this->render('navigation/monProfil.html.twig', [
-            'user' => $user
+            'user' => $user,
+            'sorties' => $sorties
         ]);
     }
 
     #[Route('/updateProfil/{id}', name: '_updateProfil')]
-    public function updateProfil(Request $request, int $id, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
+    public function updateProfil(Request $request, int $id, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
     {
         $user = $entityManager->getRepository(User::class)->find($id);
 
@@ -67,6 +72,21 @@ class HomeController extends AbstractController
         $updateProfilForm->handleRequest($request);
 
         if ($updateProfilForm->isSubmitted() && $updateProfilForm->isValid()) {
+            if ($updateProfilForm->has('delete_image') && $updateProfilForm->get('delete_image')->getData()) {
+                $user->deletePhoto();
+            }
+
+            $photoFile = $updateProfilForm->get('urlPhoto')->getData();
+            if ($photoFile) {
+                $newFilename = strtolower($slugger->slug($user->getPseudo() . '-' . uniqid())) . '.' . $photoFile->guessExtension();
+                $photoFile->move(
+                    $this->getParameter('photos_directory'),
+                    $newFilename
+                );
+                $user->deletePhoto();
+                $user->setUrlPhoto($newFilename);
+            }
+
             $plainPassword = $updateProfilForm->get('plainPassword')->getData();
             if ($plainPassword) {
                 $user->setPassword(
@@ -76,6 +96,7 @@ class HomeController extends AbstractController
                     )
                 );
             }
+
             $entityManager->persist($user);
             $entityManager->flush();
 
@@ -89,6 +110,7 @@ class HomeController extends AbstractController
             'user' => $user
         ]);
     }
+
     #[Route('/createSortie', name: '_createSortie')]
     public function creerSortie(Request $request, EntityManagerInterface $entityManager): Response
     {
