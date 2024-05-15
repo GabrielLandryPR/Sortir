@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Lieu;
 use App\Entity\Sortie;
 use App\Entity\User;
+use App\Entity\Ville;
 use App\Form\SortieFormType;
 use App\Form\UpdateProfilType;
 use App\Repository\SiteRepository;
