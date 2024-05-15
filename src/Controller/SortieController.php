@@ -2,33 +2,37 @@
 
 namespace App\Controller;
 
+use App\Entity\Sortie;
+use App\Form\SortieFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Security;
+use App\Repository\SortieRepository;
 
 class SortieController extends AbstractController
 {
-    private $security;
-
-    public function __construct(Security $security)
-    {
-        $this->security = $security;
-    }
-
     /**
-     * @Route("/sorties", name="sorties")
+     * @Route("/sortie/new", name="sortie_new", methods={"GET","POST"})
      */
-    public function index(): Response
+    public function new(Request $request): Response
     {
-        $user = $this->security->getUser();
+        $sortie = new Sortie();
+        $form = $this->createForm(SortieFormType::class, $sortie);
+        $form->handleRequest($request);
 
-        $site = $user->getNoSite();
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($sortie);
+            $entityManager->flush();
 
-        $sorties = $site->getSorties();
+            return $this->redirectToRoute('sortie_index');
+        }
 
-        return $this->render('sorties/index.html.twig', [
-            'sorties' => $sorties,
+        return $this->render('sortie/list.html.twig', [
+            'sortie' => $sortie,
+            'form' => $form->createView(),
         ]);
     }
+
 }
