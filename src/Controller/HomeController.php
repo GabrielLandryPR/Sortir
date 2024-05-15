@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Etat;
 use App\Entity\Lieu;
 use App\Entity\Sortie;
 use App\Entity\User;
@@ -58,7 +59,10 @@ class HomeController extends AbstractController
         $user = $this->getUser();
         $sortie = new Sortie();
         $sortie->setOrganisateur($user->getId());
+        $sortie->setIdOrga($user);
         $sortie->setNoSite($user->getNoSite());
+        $sortie->setEtatSortie($entityManager->getRepository(Etat::class)->find(1)->getId());
+        $sortie->setNoEtat($entityManager->getRepository(Etat::class)->find(1));
         $sortie->addUser($user);
 
         $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
@@ -91,6 +95,7 @@ class HomeController extends AbstractController
                 $entityManager->persist($ville);
                 $entityManager->flush();
             }
+
 
             $lieu = new Lieu();
             $lieu->setNomLieu($nomLieu);

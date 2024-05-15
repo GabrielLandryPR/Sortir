@@ -68,7 +68,6 @@ class Etat
     public function removeNoEtat(Sortie $noEtat): static
     {
         if ($this->noEtat->removeElement($noEtat)) {
-            // set the owning side to null (unless already changed)
             if ($noEtat->getNoEtat() === $this) {
                 $noEtat->setNoEtat(null);
             }
