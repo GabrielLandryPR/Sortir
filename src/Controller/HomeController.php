@@ -25,23 +25,35 @@ class HomeController extends AbstractController
 {
 
     #[Route('/annulerSortie/{id}', name: '_annulerSortie')]
-    public function annulerSortie(int $id, EntityManagerInterface $entityManager, EtatRepository $etatRepository): Response
+    public function annulerSortie(int $id, EntityManagerInterface $entityManager, EtatRepository $etatRepository, SortieRepository $sortieRepository): Response
     {
         $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+        $idOrga = $sortie->getIdOrga();
 
         if (!$sortie) {
             throw $this->createNotFoundException('Sortie non trouvée');
         }
 
         $etatAnnule = $etatRepository->find(2);
-
         if (!$etatAnnule) {
-            throw $this->createNotFoundException('Etat non trouvé');
+            throw $this->createNotFoundException('Etat non trouvé il faut le répertorié en BDD');
+        }
+
+
+        if ($idOrga != $this->getUser()) {
+            $this->addFlash('error', 'Vous n\'êtes pas l\'organisateur de cette sortie');
+            return $this->redirectToRoute('app_sortir_list');
+        }
+        if ($etatAnnule->getId() == 2) {
+            $this->addFlash('error', 'La sortie est déjà annulée');
+            return $this->redirectToRoute('app_sortir_list');
         }
         $sortie->setNoEtat($etatAnnule);
-
         $entityManager->persist($sortie);
         $entityManager->flush();
+
+        $this->addFlash('success', 'La sortie a été annulée avec succès');
+
 
         return $this->redirectToRoute('app_sortir_list');
     }
