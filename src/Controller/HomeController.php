@@ -40,19 +40,55 @@ class HomeController extends AbstractController
         ]);
     }
 
-
-
     #[Route('/monProfil', name: '_monProfil')]
-    public function monProfil(User $user): Response
+    public function monProfil(): Response
     {
         $user = $this->getUser();
 
+        if (!$user) {
+            throw $this->createNotFoundException('Utilisateur non trouvé');
+        }
+
         return $this->render('navigation/monProfil.html.twig', [
-                'user' => $user
-            ]
-        );
+            'user' => $user
+        ]);
     }
 
+    #[Route('/updateProfil/{id}', name: '_updateProfil')]
+    public function updateProfil(Request $request, int $id, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
+    {
+        $user = $entityManager->getRepository(User::class)->find($id);
+
+        if (!$user) {
+            throw $this->createNotFoundException('Utilisateur non trouvé');
+        }
+
+        $updateProfilForm = $this->createForm(UpdateProfilType::class, $user, ['editMode' => true]);
+        $updateProfilForm->handleRequest($request);
+
+        if ($updateProfilForm->isSubmitted() && $updateProfilForm->isValid()) {
+            $plainPassword = $updateProfilForm->get('plainPassword')->getData();
+            if ($plainPassword) {
+                $user->setPassword(
+                    $userPasswordHasher->hashPassword(
+                        $user,
+                        $plainPassword
+                    )
+                );
+            }
+            $entityManager->persist($user);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Votre profil a été mis à jour.');
+
+            return $this->redirectToRoute('app_sortir_monProfil');
+        }
+
+        return $this->render('registration/updateProfil.html.twig', [
+            'updateProfilForm' => $updateProfilForm->createView(),
+            'user' => $user
+        ]);
+    }
     #[Route('/createSortie', name: '_createSortie')]
     public function creerSortie(Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -126,37 +162,6 @@ class HomeController extends AbstractController
     {
         return $this->render('navigation/createSortie.html.twig', [
             "user" => $user
-        ]);
-    }
-
-    #[Route('/updateProfil/{id}', name: '_updateProfil')]
-    public function updateProfil(Request $request, int $id, UserPasswordHasherInterface $userPasswordHasher,EntityManagerInterface $entityManager): Response
-    {
-        $user = $this->getUser();
-
-        if (!$user) {
-            throw $this->createNotFoundException('Utilisateur non trouvé');
-        }
-
-        $updateProfilForm = $this->createForm(UpdateProfilType::class, $user);
-        $updateProfilForm->handleRequest($request);
-
-        if ($updateProfilForm->isSubmitted() && $updateProfilForm->isValid()) {
-            $user->setPassword(
-                $userPasswordHasher->hashPassword(
-                    $user,
-                    $updateProfilForm->get('password')->getData()
-                )
-            );
-            $entityManager->persist($user);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_sortir_list');
-        }
-
-        return $this->render('registration/updateProfil.html.twig', [
-            'updateProfilForm' => $updateProfilForm->createView(),
-            'user' => $user
         ]);
     }
 

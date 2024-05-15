@@ -1,14 +1,40 @@
 {% extends 'base.html.twig' %}
+
 {% block title %}
     Sortir : Mon profil
 {% endblock %}
 
 {% block body %}
-    <h1>Mon profil</h1>
-    {% if app.user%}
-        <li><a href="{{ path('app_sortir_updateProfil', {'id': user.id}) }}">Modifier profil</a></li>
-    {% endif %}
-    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Amet animi at atque autem,
-        ea enim inventore laborum maiores, numquam odit officia optio quo voluptatum.
-        Aperiam eaque neque rem sint tempora?</p>
+    <div class="container mt-5">
+        <h1>Mon profil</h1>
+        {% if app.user %}
+            <div class="form-group">
+                <label>Pseudo</label>
+                <input type="text" class="form-control" value="{{ app.user.pseudo }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Prénom</label>
+                <input type="text" class="form-control" value="{{ app.user.prenom }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" class="form-control" value="{{ app.user.nom }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Téléphone</label>
+                <input type="text" class="form-control" value="{{ app.user.tel }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" class="form-control" value="{{ app.user.email }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Ville de rattachement</label>
+                <input type="text" class="form-control" value="{{ app.user.noSite.nomSite }}" readonly>
+            </div>
+            <a href="{{ path('app_sortir_updateProfil', {'id': app.user.id}) }}" class="btn btn-primary">Modifier profil</a>
+        {% else %}
+            <p>Vous devez être connecté pour voir cette page.</p>
+        {% endif %}
+    </div>
 {% endblock %}

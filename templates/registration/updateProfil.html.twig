@@ -1,11 +1,66 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Modifier profil{% endblock %}
 
 {% block body %}
-    <h1>Register</h1>
-    {{ form(updateProfilForm) }}
+    <div class="container mt-5">
+        <h1>Modifier profil</h1>
 
+        {{ form_start(updateProfilForm) }}
 
+        <div class="form-group">
+            {{ form_label(updateProfilForm.pseudo) }}
+            {{ form_widget(updateProfilForm.pseudo) }}
+        </div>
+        <div class="form-group">
+            {{ form_label(updateProfilForm.prenom) }}
+            {{ form_widget(updateProfilForm.prenom) }}
+        </div>
+        <div class="form-group">
+            {{ form_label(updateProfilForm.nom) }}
+            {{ form_widget(updateProfilForm.nom) }}
+        </div>
+        <div class="form-group">
+            {{ form_label(updateProfilForm.tel) }}
+            {{ form_widget(updateProfilForm.tel) }}
+        </div>
+        <div class="form-group">
+            {{ form_label(updateProfilForm.email) }}
+            {{ form_widget(updateProfilForm.email) }}
+        </div>
+        <div class="form-group">
+            {{ form_label(updateProfilForm.noSite) }}
+            {{ form_widget(updateProfilForm.noSite) }}
+        </div>
+        {% if updateProfilForm.plainPassword is defined %}
+            <div class="form-group">
+                {{ form_label(updateProfilForm.plainPassword.first) }}
+                {{ form_widget(updateProfilForm.plainPassword.first) }}
+            </div>
+            <div class="form-group">
+                {{ form_label(updateProfilForm.plainPassword.second) }}
+                {{ form_widget(updateProfilForm.plainPassword.second) }}
+            </div>
+        {% endif %}
 
+        <div class="form-group">
+            {{ form_widget(updateProfilForm.submit, { 'attr': {'class': 'btn btn-primary'} }) }}
+            <a href="{{ path('app_sortir_monProfil') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+
+        {{ form_end(updateProfilForm) }}
+
+        <script>
+            document.getElementById('toggle-password').addEventListener('click', function() {
+                let passwordFields = document.querySelectorAll('input[type="password"]');
+                passwordFields.forEach(function(passwordField) {
+                    if (passwordField.type === "password") {
+                        passwordField.type = "text";
+                    } else {
+                        passwordField.type = "password";
+                    }
+                });
+            });
+        </script>
+    </div>
 {% endblock %}

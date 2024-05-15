@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Sortie;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -51,8 +52,9 @@ class SortieFormType extends AbstractType
             ])
             ->add('duree', IntegerType::class, [
                 'label' => 'Durée (en minutes)',
+                'attr' => ['id' => 'duree']
             ])
-            ->add('dateFin', DateTimeType::class, [
+            ->add('dateFin', DateType::class, [
                 'widget' => 'single_text',
                 'label' => "Date limite d'inscription",
             ])

@@ -12,22 +12,41 @@
     {% endblock %}
 </head>
 <body>
-<h1></h1>
-<nav>
-    <ul style="display:flex; flex-direction: row; list-style: none;">
-        <li><a href="{{ path('app_register') }}">Création du compte</a></li>
-        <li><a href="{{ path('app_login') }}">Connexion</a></li>
-        <li><a href="{{ path('app_sortir_createSortie') }}">Créer une sortie</a></li>
-        {% if app.user %}
-            <h1>Bienvenue, {{ app.user.pseudo }}!</h1>
-            <li><a href="{{ path('app_sortir_list') }}">Accueil</a></li>
-            <li><a href="{{ path('app_sortir_updateProfil', {'id': app.user.id}) }}">Mon profil</a></li>
-            <li><a href="{{ path('app_sortir_createSortie') }}">Créer une sortie</a></li>
-            <li><a href="{{ path('app_logout') }}">Déconnexion</a></li>
-        {% else %}
-            <li><a href="{{ path('app_login') }}">Connexion</a></li>
-        {% endif %}
-    </ul>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="{{ path('app_sortir_list') }}">Sortir</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            {% if app.user and 'ROLE_ADMIN' in app.user.roles %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_register') }}">Création de compte</a>
+                </li>
+            {% endif %}
+            {% if app.user %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_sortir_list') }}">Liste des Sorties</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_sortir_createSortie') }}">Créer une sortie</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_sortir_monProfil') }}">Mon profil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a>
+                </li>
+                <li class="nav-item">
+                    <span class="navbar-text">Connecté en tant que : {{ app.user.pseudo }}</span>
+                </li>
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_login') }}">Connexion</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
 </nav>
 
 {% block body %}{% endblock %}
