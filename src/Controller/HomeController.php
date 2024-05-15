@@ -33,7 +33,6 @@ class HomeController extends AbstractController
             throw $this->createNotFoundException('Sortie non trouvée');
         }
 
-
         $etatAnnule = $etatRepository->find(2);
 
         if (!$etatAnnule) {

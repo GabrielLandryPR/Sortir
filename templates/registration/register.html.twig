@@ -1,15 +1,18 @@
-{% extends 'base.html.twig' %}
+
 
 {% block title %}Register{% endblock %}
 
 {% block body %}
     <h1>Register</h1>
 
+    <div id="register" >
     {{ form_errors(registrationForm) }}
 
     {{ form_start(registrationForm) }}
 
 
-        <button type="submit" class="btn">Register</button>
+
     {{ form_end(registrationForm) }}
+    </div>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
 {% endblock %}
