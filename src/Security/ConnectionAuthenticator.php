@@ -6,8 +6,11 @@ use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
@@ -25,6 +28,7 @@ class ConnectionAuthenticator extends AbstractLoginFormAuthenticator
 
     public function __construct(private UrlGeneratorInterface $urlGenerator, private UserRepository $userRepository)
     {
+
     }
 
     public function authenticate(Request $request): Passport
@@ -33,7 +37,7 @@ class ConnectionAuthenticator extends AbstractLoginFormAuthenticator
         $user = $this->userRepository->findOneByEmailOrPseudo($login);
 
         if ($user === null) {
-            throw new \Exception('email ou login non trouvé !');
+            throw new AuthenticationException('Utilisateur non trouvé');
         }
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $login);
 
@@ -56,5 +60,14 @@ class ConnectionAuthenticator extends AbstractLoginFormAuthenticator
     protected function getLoginUrl(Request $request): string
     {
         return $this->urlGenerator->generate(self::LOGIN_ROUTE);
+    }
+
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+    {
+        if ($exception instanceof UserNotFoundException) {
+            $request->getSession()->getFlashBag()->add('error', $exception->getMessage());
+        }
+
+        return new RedirectResponse($this->urlGenerator->generate(self::LOGIN_ROUTE));
     }
 }
