@@ -60,7 +60,6 @@
                     <td>{{ sortie.noEtat.libelle }}</td>
                     <td>{{ sortie.dateFin|date('Y-m-d H:i:s') }}</td>
                     <td>{{ sortie.description }}</td>
-                    <td>{{ sortie.idOrga.pseudo ? sortie.idOrga.pseudo : sortie.idOrga.prenom ~ ' ' ~ sortie.idOrga.nom }}</td>
                     <td><a href="{{ path('app_sortir_annulerSortie', {'id': sortie.id}) }}">Annuler la sortie</a></td>
                 </tr>
             {% endfor %}
@@ -83,5 +82,4 @@
 {% block javascripts %}
     {{ parent() }}
     <script src="{{ asset('js/sortieFilter.js') }}"></script>
-    {% endfor %}
 {% endblock %}
