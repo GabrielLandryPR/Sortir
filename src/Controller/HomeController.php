@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Controller;
-
+use App\Repository\EtatRepository;
 use App\Entity\Etat;
 use App\Entity\Lieu;
 use App\Entity\Sortie;
@@ -37,7 +37,7 @@ class HomeController extends AbstractController
             throw $this->createNotFoundException('Sortie non trouvée');
         }
 
-        $etatAnnule = $etatRepository->find(2);
+        $etatAnnule = $etatRepository->find(6);
         if (!$etatAnnule) {
             throw $this->createNotFoundException('Etat non trouvé il faut le répertorié en BDD');
         }
@@ -45,18 +45,30 @@ class HomeController extends AbstractController
 
         if ($idOrga != $this->getUser()) {
             $this->addFlash('error', 'Vous n\'êtes pas l\'organisateur de cette sortie');
+            if ($sortie->getNoEtat()->getId() == 4){
+                $this->addFlash('error', 'La sortie est en cour');
+                return $this->redirectToRoute('app_sortir_list');
+            }
+            if ($sortie->getNoEtat()->getId() == 5){
+                $this->addFlash('error', 'La sortie est en passée');
+                return $this->redirectToRoute('app_sortir_list');
+            }
+            if ($sortie->getNoEtat()->getId() == 6){
+                $this->addFlash('error', 'La sortie est annulée');
+                return $this->redirectToRoute('app_sortir_list');
+            }
+            if ($etatAnnule->getId() == 2) {
+                $this->addFlash('error', 'La sortie est déjà annulée');
+                return $this->redirectToRoute('app_sortir_list');
+            }
             return $this->redirectToRoute('app_sortir_list');
         }
-        if ($etatAnnule->getId() == 2) {
-            $this->addFlash('error', 'La sortie est déjà annulée');
-            return $this->redirectToRoute('app_sortir_list');
-        }
+
         $sortie->setNoEtat($etatAnnule);
         $entityManager->persist($sortie);
         $entityManager->flush();
 
         $this->addFlash('success', 'La sortie a été annulée avec succès');
-
 
         return $this->redirectToRoute('app_sortir_list');
     }
