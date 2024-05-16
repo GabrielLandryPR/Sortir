@@ -346,60 +346,6 @@ class HomeController extends AbstractController
         return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
     }
 
-    #[Route('/filter_sorties', name: 'filter_sorties')]
-    public function filterSorties(Request $request, SortieRepository $sortieRepository): Response
-    {
-        $user = $this->getUser();
-        $organizer = $request->query->get('organizer') === '1' ? $user : null;
-        $registered = $request->query->get('registered') === '1' ? $user : null;
-        $notRegistered = $request->query->get('notRegistered') === '1' ? $user : null;
-        $past = $request->query->get('past') === '1' ? true : false;
-        $site = $request->query->get('site');
-        $startDate = $request->query->get('startDate') ? new \DateTime($request->query->get('startDate')) : null;
-        $endDate = $request->query->get('endDate') ? new \DateTime($request->query->get('endDate')) : null;
-        $searchName = $request->query->get('searchName');
-
-        if ($endDate && $startDate && $endDate < $startDate) {
-            return $this->json(['error' => "La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'."], Response::HTTP_BAD_REQUEST);
-        }
-
-        $sorties = $sortieRepository->findFilteredSorties(
-            $organizer,
-            $registered,
-            $notRegistered,
-            $past,
-            $site,
-            $startDate ? $startDate->format('Y-m-d H:i:s') : null,
-            $endDate ? $endDate->format('Y-m-d H:i:s') : null,
-            $searchName
-        );
-
-        return $this->json([
-            'sorties' => array_map(function ($sortie) use ($user) {
-                $actions = '';
-                if ($sortie->getIdOrga()->getId() == $user->getId()) {
-                    $actions = '<a href="' . $this->generateUrl('app_sortir_modifierSortie', ['id' => $sortie->getId()]) . '">Modifier</a>';
-                } elseif ($sortie->getUsers()->contains($user)) {
-                    $actions = '<a href="#" class="desinscription-link" data-sortie-id="' . $sortie->getId() . '">Se désister</a>';
-                } elseif ($sortie->getUsers()->count() < $sortie->getNbInscriptionMax()) {
-                    $actions = '<a href="#" class="inscription-link" data-sortie-id="' . $sortie->getId() . '">S\'inscrire</a>';
-                }
-
-                return [
-                    'id' => $sortie->getId(),
-                    'nomSortie' => $sortie->getNomSortie(),
-                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i'),
-                    'dateClotureInscription' => $sortie->getDateFin()->format('Y-m-d H:i'),
-                    'nbInscrits' => $sortie->getUsers()->count(),
-                    'nbInscriptionMax' => $sortie->getNbInscriptionMax(),
-                    'etatSortie' => $sortie->getNoEtat()->getLibelle(),
-                    'organisateur' => $sortie->getIdOrga()->getPseudo() ?: $sortie->getIdOrga()->getPrenom() . ' ' . $sortie->getIdOrga()->getNom(),
-                    'actions' => $actions
-                ];
-            }, $sorties)
-        ]);
-    }
-
     #[Route('/filter_by_site', name: 'filter_by_site', methods: ['POST'])]
     public function filterBySite(Request $request, SortieRepository $sortieRepository): Response
     {
@@ -463,4 +409,70 @@ class HomeController extends AbstractController
 
         return new JsonResponse(['success' => 'Vous êtes inscrit à la sortie.']);
     }
+
+    #[Route('/filter_sorties', name: 'filter_sorties')]
+    public function filterSorties(Request $request, SortieRepository $sortieRepository): Response
+    {
+        $user = $this->getUser();
+        $organizer = $request->query->get('organizer') === '1' ? $user : null;
+        $registered = $request->query->get('registered') === '1' ? $user : null;
+        $notRegistered = $request->query->get('notRegistered') === '1' ? $user : null;
+        $past = $request->query->get('past') === '1' ? true : false;
+        $site = $request->query->get('site');
+        $startDate = $request->query->get('startDate') ? new \DateTime($request->query->get('startDate')) : null;
+        $endDate = $request->query->get('endDate') ? new \DateTime($request->query->get('endDate')) : null;
+        $searchName = $request->query->get('searchName');
+
+        if ($endDate && $startDate && $endDate < $startDate) {
+            return $this->json(['error' => "La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'."], Response::HTTP_BAD_REQUEST);
+        }
+
+        $sorties = $sortieRepository->findFilteredSorties(
+            $organizer,
+            $registered,
+            $notRegistered,
+            $past,
+            $site,
+            $startDate ? $startDate->format('Y-m-d H:i:s') : null,
+            $endDate ? $endDate->format('Y-m-d H:i:s') : null,
+            $searchName
+        );
+
+        $filteredSorties = array_filter($sorties, function ($sortie) use ($user) {
+            return $sortie->getNoEtat()->getId() !== 1 || $sortie->getIdOrga()->getId() === $user->getId();
+        });
+
+        return $this->json([
+            'sorties' => array_map(function ($sortie) use ($user) {
+                $actions = '';
+                if ($sortie->getIdOrga()->getId() == $user->getId()) {
+                    $actions .= ' <a href="' . $this->generateUrl('app_sortir_modifierSortie', ['id' => $sortie->getId()]) . '" class="btn btn-primary btn-sm">Modifier</a>';
+                    if ($sortie->getNoEtat()->getId() != 1) {
+                        $actions .= ' <button class="btn btn-warning btn-sm annuler-sortie" data-sortie-id="' . $sortie->getId() . '">Annuler</button>';
+                    }
+                } elseif ($sortie->getUsers()->contains($user)) {
+                    $actions .= ' <a href="#" class="btn btn-danger btn-sm desinscription-link" data-sortie-id="' . $sortie->getId() . '">Se désister</a>';
+                } elseif ($sortie->getUsers()->count() < $sortie->getNbInscriptionMax()) {
+                    $actions .= ' <a href="#" class="btn btn-success btn-sm inscription-link" data-sortie-id="' . $sortie->getId() . '">S\'inscrire</a>';
+                }
+
+                return [
+                    'id' => $sortie->getId(),
+                    'nomSortie' => $sortie->getNomSortie(),
+                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i'),
+                    'dateClotureInscription' => $sortie->getDateFin()->format('Y-m-d H:i'),
+                    'nbInscrits' => $sortie->getUsers()->count(),
+                    'nbInscriptionMax' => $sortie->getNbInscriptionMax(),
+                    'etatSortie' => $sortie->getNoEtat()->getLibelle(),
+                    'organisateur' => $sortie->getIdOrga()->getPseudo() ?: $sortie->getIdOrga()->getPrenom() . ' ' . $sortie->getIdOrga()->getNom(),
+                    'actions' => $actions
+                ];
+            }, $filteredSorties)
+        ]);
+    }
+
+
+
 }
+
+

@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (endDateInput.value && endDateInput.value < startDateInput.value) {
             validationInProgress = true;
-            alert("La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'." +error);
+            alert("La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'.");
             endDateInput.value = '';
             return;
         }
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Une erreur est survenue lors du chargement des données.' +error);
+                alert('Une erreur est survenue lors du chargement des données.');
             });
     }
 
@@ -68,11 +68,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${sortie.etatSortie}</td>
                     <td>${sortie.organisateur}</td>
                     <td>
-                        <a href="/sortir/detailSortie/${sortie.id}">Afficher</a>
+                        <a href="/sortir/detailSortie/${sortie.id}" class="btn btn-info btn-sm">Afficher</a>
                         ${sortie.actions}
                     </td>
                 </tr>`;
                 sortiesBody.innerHTML += row;
+            });
+
+            document.querySelectorAll('.annuler-sortie').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const sortieId = this.dataset.sortieId;
+                    annulerSortie(sortieId);
+                });
+            });
+
+            document.querySelectorAll('.publier-sortie').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const sortieId = this.dataset.sortieId;
+                    publierSortie(sortieId);
+                });
             });
 
             document.querySelectorAll('.desinscription-link').forEach(link => {
@@ -93,6 +109,50 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             sortiesBody.innerHTML = '<tr><td colspan="7">Aucune sortie trouvée correspondant aux critères de recherche.</td></tr>';
         }
+    }
+
+    function annulerSortie(sortieId) {
+        fetch(`/sortir/ajax_annulerSortie/${sortieId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateSorties();
+                } else {
+                    alert(`Erreur : ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue lors de l\'annulation de la sortie.');
+            });
+    }
+
+    function publierSortie(sortieId) {
+        fetch(`/sortir/ajax_publierSortie/${sortieId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateSorties();
+                } else {
+                    alert(`Erreur : ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue lors de la publication de la sortie.');
+            });
     }
 
     function desinscrire(sortieId) {

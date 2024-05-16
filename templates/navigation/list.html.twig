@@ -83,17 +83,15 @@
                     <tbody id="sortiesBody">
                     {% for sortie in sorties %}
                         <tr>
-                            <td>{{ sortie.nomSortie }}</td>
-                            <td>{{ sortie.dateDebut|date('Y-m-d H:i') }}</td>
-                            <td>{{ sortie.dateFin|date('Y-m-d H:i') }}</td>
-                            <td>{{ sortie.users|length }}/{{ sortie.nbInscriptionMax }}</td>
-                            <td>{{ sortie.noEtat.libelle }}</td>
-                            <td>{{ sortie.idOrga.pseudo ? sortie.idOrga.pseudo : sortie.idOrga.prenom ~ ' ' ~ sortie.idOrga.nom }}</td>
                             <td>
                                 <a href="{{ path('app_sortir_detailSortie', {'id': sortie.id}) }}" class="btn btn-info btn-sm">Afficher</a>
                                 {% if sortie.idOrga and sortie.idOrga.id == app.user.id %}
-                                    <a href="{{ path('app_sortir_modifierSortie', {'id': sortie.id}) }}" class="btn btn-primary btn-sm">Modifier</a>
-                                    <a href="{{ path('app_sortir_annulerSortie', {'id': sortie.id}) }}">Annuler la sortie</a>
+                                    {% if sortie.noEtat.id != 1 %} {# État autre que "Créée" #}
+                                        <a href="{{ path('app_sortir_modifierSortie', {'id': sortie.id}) }}" class="btn btn-primary btn-sm">Modifier</a>
+                                        <button class="btn btn-warning btn-sm annuler-sortie" data-sortie-id="{{ sortie.id }}">Annuler</button>
+                                    {% elseif sortie.noEtat.id == 1 %} {# État "Créée" #}
+                                        <button class="btn btn-success btn-sm publier-sortie" data-sortie-id="{{ sortie.id }}">Publier</button>
+                                    {% endif %}
                                 {% elseif sortie.users.contains(app.user) %}
                                     <a href="#" class="btn btn-danger btn-sm desinscription-link" data-sortie-id="{{ sortie.id }}">Se désister</a>
                                 {% elseif sortie.users|length < sortie.nbInscriptionMax %}
