@@ -9,7 +9,6 @@ use App\Entity\User;
 use App\Entity\Ville;
 use App\Form\SortieFormType;
 use App\Form\UpdateProfilType;
-use App\Repository\EtatRepository;
 use App\Repository\SiteRepository;
 use App\Repository\SortieRepository;
 use App\Repository\UserRepository;
