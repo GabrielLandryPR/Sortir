@@ -2,188 +2,144 @@
 
 namespace App\Controller;
 
-use App\Entity\Etat;
-use App\Entity\Lieu;
 use App\Entity\Sortie;
 use App\Entity\User;
-use App\Entity\Ville;
 use App\Form\SortieFormType;
+
 use App\Form\UpdateProfilType;
 use App\Repository\SiteRepository;
 use App\Repository\SortieRepository;
 use App\Repository\UserRepository;
+
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
 {
+
+
+
+
+
     #[Route('/list', name: '_list')]
-    public function list(Request $request, SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository): Response
-    {
-        $sites = $siteRepository->findAll();
-
-        $sorties = $sortieRepository->findAll();
-
-        foreach ($sorties as $sortie) {
-            $organisateur = $userRepository->find($sortie->getOrganisateur());
-            $sortie->setIdOrga($organisateur);
-        }
-
-        return $this->render('navigation/list.html.twig', [
-            'sorties' => $sorties,
-            'sites' => $sites
-        ]);
-    }
-
-    #[Route('/monProfil', name: '_monProfil')]
-    public function monProfil(SortieRepository $sortieRepository): Response
+    public function list(Request $request, EntityManagerInterface $em, SortieRepository $sortieRepository, SiteRepository $siteRepository): Response
     {
         $user = $this->getUser();
 
-        if (!$user) {
-            throw $this->createNotFoundException('Utilisateur non trouvé');
+        $sites = $siteRepository->findAll();
+        $choices = [];
+        foreach ($sites as $site) {
+            $choices[$site->getNomSite()] = $site->getId();
+        }
+        $choices = ["Tous les sites" => null] + $choices;
+
+        $form = $this->createFormBuilder(['site' => null])
+            ->add('site', ChoiceType::class, [
+                'choices' => $choices,
+                'required' => false,
+            ])
+            ->add('submit', SubmitType::class, ['label' => 'Filtrer'])
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            if ($data['site'] !== null) {
+                $sorties = $sortieRepository->findBy(['noSite' => $data['site']]);
+            } else {
+                $sorties = $sortieRepository->findAll();
+            }
+        } else {
+            $sorties = $sortieRepository->findAll();
         }
 
-        // Récupérer les sorties créées par l'utilisateur
-        $sorties = $sortieRepository->findBy(['idOrga' => $user]);
+        return $this->render('navigation/list.html.twig', [
+                'user' => $user,
+                'sorties' => $sorties,
+                'sites' => $sites,
+                'form' => $form->createView(),
+            ]
+        );
+    }
+
+    #[
+        Route('/monProfil', name: '_monProfil')]
+    public function monProfil(User $user): Response
+    {
+        $user = $this->getUser();
 
         return $this->render('navigation/monProfil.html.twig', [
-            'user' => $user,
-            'sorties' => $sorties
-        ]);
+                'user' => $user
+            ]
+        );
     }
 
-    #[Route('/updateProfil/{id}', name: '_updateProfil')]
-    public function updateProfil(Request $request, int $id, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
-    {
-        $user = $entityManager->getRepository(User::class)->find($id);
-
-        if (!$user) {
-            throw $this->createNotFoundException('Utilisateur non trouvé');
-        }
-
-        $updateProfilForm = $this->createForm(UpdateProfilType::class, $user, ['editMode' => true]);
-        $updateProfilForm->handleRequest($request);
-
-        if ($updateProfilForm->isSubmitted() && $updateProfilForm->isValid()) {
-            if ($updateProfilForm->has('delete_image') && $updateProfilForm->get('delete_image')->getData()) {
-                $user->deletePhoto();
-            }
-
-            $photoFile = $updateProfilForm->get('urlPhoto')->getData();
-            if ($photoFile) {
-                $newFilename = strtolower($slugger->slug($user->getPseudo() . '-' . uniqid())) . '.' . $photoFile->guessExtension();
-                $photoFile->move(
-                    $this->getParameter('photos_directory'),
-                    $newFilename
-                );
-                $user->deletePhoto();
-                $user->setUrlPhoto($newFilename);
-            }
-
-            $plainPassword = $updateProfilForm->get('plainPassword')->getData();
-            if ($plainPassword) {
-                $user->setPassword(
-                    $userPasswordHasher->hashPassword(
-                        $user,
-                        $plainPassword
-                    )
-                );
-            }
-
-            $entityManager->persist($user);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Votre profil a été mis à jour.');
-
-            return $this->redirectToRoute('app_sortir_monProfil');
-        }
-
-        return $this->render('registration/updateProfil.html.twig', [
-            'updateProfilForm' => $updateProfilForm->createView(),
-            'user' => $user
-        ]);
-    }
-
-    #[Route('/createSortie', name: '_createSortie')]
-    public function creerSortie(Request $request, EntityManagerInterface $entityManager): Response
+    #[Route('/creerSortie', name: '_creerSortie')]
+    public function creerSortie(User $user, Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
         $sortie = new Sortie();
         $sortie->setOrganisateur($user->getId());
-        $sortie->setIdOrga($user);
-        $sortie->setNoSite($user->getNoSite());
-        $sortie->setEtatSortie($entityManager->getRepository(Etat::class)->find(1)->getId());
-        $sortie->setNoEtat($entityManager->getRepository(Etat::class)->find(1));
-        $sortie->addUser($user);
-
         $sortieFormType = $this->createForm(SortieFormType::class, $sortie);
         $sortieFormType->handleRequest($request);
 
         if ($sortieFormType->isSubmitted() && $sortieFormType->isValid()) {
-            $file = $sortieFormType->get('urlPhoto')->getData();
-            if ($file) {
-                $fileName = uniqid() . '.' . $file->guessExtension();
-                $file->move($this->getParameter('photos_directory'), $fileName);
-                $sortie->setUrlPhoto($fileName);
-            }
-
-            $nomLieu = $sortieFormType->get('lieuSearch')->getData();
-            $latitude = $sortieFormType->get('latitude')->getData();
-            $longitude = $sortieFormType->get('longitude')->getData();
-            $street = $sortieFormType->get('rue')->getData();
-            $postalCode = $sortieFormType->get('codePostal')->getData();
-            $nomVille = $sortieFormType->get('ville')->getData();
-
-            $ville = $entityManager->getRepository(Ville::class)->findOneBy([
-                'nomVille' => $nomVille,
-                'codePostal' => $postalCode
-            ]);
-
-            if (!$ville) {
-                $ville = new Ville();
-                $ville->setNomVille($nomVille);
-                $ville->setCodePostal($postalCode);
-                $entityManager->persist($ville);
-                $entityManager->flush();
-            }
-
-
-            $lieu = new Lieu();
-            $lieu->setNomLieu($nomLieu);
-            $lieu->setLatitude($latitude);
-            $lieu->setLongitude($longitude);
-            $lieu->setRue($street);
-            $lieu->setNoVille($ville);
-
-            $entityManager->persist($lieu);
-
-            $sortie->setNoLieu($lieu);
             $entityManager->persist($sortie);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Une sortie a été créée');
+            $this->addFlash('success', 'Une sortie a été créer');
 
             return $this->redirectToRoute('app_sortir_list');
         }
-
-        return $this->render('navigation/createSortie.html.twig', [
+        return $this->render('navigation/creerSortie.html.twig', [
             "user" => $user,
-            "sortieFormType" => $sortieFormType->createView()
-        ]);
+            "sortieFormType" => $sortieFormType]);
     }
 
     #[Route('/modifierSortie', name: '_modifierSortie')]
     public function modifierSorti(User $user): Response
     {
-        return $this->render('navigation/createSortie.html.twig', [
+        return $this->render('navigation/creerSortie.html.twig', [
             "user" => $user
+        ]);
+    }
+
+    #[Route('/updateProfil/{id}', name: '_updateProfil')]
+    public function updateProfil(Request $request, int $id, UserPasswordHasherInterface $userPasswordHasher,EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+
+        if (!$user) {
+            throw $this->createNotFoundException('Utilisateur non trouvé');
+        }
+
+        $updateProfilForm = $this->createForm(UpdateProfilType::class, $user);
+        $updateProfilForm->handleRequest($request);
+
+        if ($updateProfilForm->isSubmitted() && $updateProfilForm->isValid()) {
+            $user->setPassword(
+                $userPasswordHasher->hashPassword(
+                    $user,
+                    $updateProfilForm->get('password')->getData()
+                )
+            );
+            $entityManager->persist($user);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_sortir_list');
+        }
+
+        return $this->render('registration/updateProfil.html.twig', [
+            'updateProfilForm' => $updateProfilForm->createView(),
+            'user' => $user
         ]);
     }
 
@@ -255,72 +211,6 @@ class HomeController extends AbstractController
         return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
     }
 
-    #[Route('/filter_sorties', name: 'filter_sorties')]
-    public function filterSorties(Request $request, SortieRepository $sortieRepository): Response
-    {
-        $user = $this->getUser();
-        $organizer = $request->query->get('organizer') === '1' ? $user : null;
-        $registered = $request->query->get('registered') === '1' ? $user : null;
-        $notRegistered = $request->query->get('notRegistered') === '1' ? $user : null;
-        $past = $request->query->get('past') === '1' ? true : false;
-        $site = $request->query->get('site');
-        $startDate = $request->query->get('startDate') ? new \DateTime($request->query->get('startDate')) : null;
-        $endDate = $request->query->get('endDate') ? new \DateTime($request->query->get('endDate')) : null;
-        $searchName = $request->query->get('searchName');
 
-        // Validate end date
-        if ($endDate && $startDate && $endDate < $startDate) {
-            return $this->json(['error' => "La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'."], Response::HTTP_BAD_REQUEST);
-        }
-
-        $sorties = $sortieRepository->findFilteredSorties(
-            $organizer,
-            $registered,
-            $notRegistered,
-            $past,
-            $site,
-            $startDate ? $startDate->format('Y-m-d H:i:s') : null,
-            $endDate ? $endDate->format('Y-m-d H:i:s') : null,
-            $searchName
-        );
-
-        return $this->json([
-            'sorties' => array_map(function ($sortie) {
-                return [
-                    'nomSortie' => $sortie->getNomSortie(),
-                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
-                    'etatSortie' => $sortie->getNoEtat()->getLibelle(),
-                    'dateFin' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
-                    'description' => $sortie->getDescription(),
-                    'organisateur' => $sortie->getIdOrga()->getPseudo()
-                ];
-            }, $sorties)
-        ]);
-    }
-
-
-    #[Route('/filter_by_site', name: 'filter_by_site', methods: ['POST'])]
-    public function filterBySite(Request $request, SortieRepository $sortieRepository): Response
-    {
-        $siteId = $request->request->get('siteId');
-        if ($siteId) {
-            $sorties = $sortieRepository->findBy(['noSite' => $siteId]);
-        } else {
-            $sorties = $sortieRepository->findAll();
-        }
-
-        return $this->json([
-            'sorties' => array_map(function ($sortie) {
-                return [
-                    'nomSortie' => $sortie->getNomSortie(),
-                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
-                    'etatSortie' => $sortie->getNoEtat()->getLibelle(),
-                    'dateFin' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
-                    'description' => $sortie->getDescription(),
-                    'organisateur' => $sortie->getIdOrga()->getPseudo()
-                ];
-            }, $sorties)
-        ]);
-    }
 }
 
