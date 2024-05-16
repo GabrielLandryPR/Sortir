@@ -457,8 +457,12 @@ class HomeController extends AbstractController
             'sorties' => array_map(function ($sortie) use ($user) {
                 $actions = '';
                 if ($sortie->getIdOrga()->getId() == $user->getId()) {
-                    $actions .= ' <a href="' . $this->generateUrl('app_sortir_modifierSortie', ['id' => $sortie->getId()]) . '" class="btn btn-primary btn-sm">Modifier</a>';
-                    if ($sortie->getNoEtat()->getId() != 1) {
+                    if ($sortie->getNoEtat()->getId() != 6) {  // État autre que "Annulée"
+                        $actions .= ' <a href="' . $this->generateUrl('app_sortir_modifierSortie', ['id' => $sortie->getId()]) . '" class="btn btn-primary btn-sm">Modifier</a>';
+                    }
+                    if ($sortie->getNoEtat()->getId() == 1) {  // État "Créée"
+                        $actions .= ' <button class="btn btn-success btn-sm publier-sortie" data-sortie-id="' . $sortie->getId() . '">Publier</button>';
+                    } elseif ($sortie->getNoEtat()->getId() != 6) {  // État autre que "Annulée"
                         $actions .= ' <button class="btn btn-warning btn-sm annuler-sortie" data-sortie-id="' . $sortie->getId() . '">Annuler</button>';
                     }
                 } elseif ($sortie->getUsers()->contains($user)) {
@@ -482,6 +486,62 @@ class HomeController extends AbstractController
         ]);
     }
 
+    #[Route('/ajax_annulerSortie/{id}', name: 'ajax_annulerSortie')]
+    public function ajaxAnnulerSortie(int $id, EntityManagerInterface $entityManager, EtatRepository $etatRepository): JsonResponse
+    {
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+
+        if (!$sortie) {
+            return new JsonResponse(['error' => 'Sortie non trouvée'], Response::HTTP_NOT_FOUND);
+        }
+
+        $user = $this->getUser();
+        if ($sortie->getIdOrga()->getId() !== $user->getId()) {
+            return new JsonResponse(['error' => 'Vous n\'êtes pas l\'organisateur de cette sortie'], Response::HTTP_FORBIDDEN);
+        }
+
+        $etatAnnule = $etatRepository->find(6);
+        if (!$etatAnnule) {
+            return new JsonResponse(['error' => 'État "Annulée" non trouvé'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $sortie->setNoEtat($etatAnnule);
+        $entityManager->persist($sortie);
+        $entityManager->flush();
+
+        return new JsonResponse(['success' => 'La sortie a été annulée avec succès']);
+    }
+
+    #[Route('/ajax_publierSortie/{id}', name: 'ajax_publierSortie')]
+    public function ajaxPublierSortie(int $id, EntityManagerInterface $entityManager, EtatRepository $etatRepository): JsonResponse
+    {
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+
+        if (!$sortie) {
+            return new JsonResponse(['error' => 'Sortie non trouvée'], Response::HTTP_NOT_FOUND);
+        }
+
+        $user = $this->getUser();
+        if ($sortie->getIdOrga()->getId() !== $user->getId()) {
+            return new JsonResponse(['error' => 'Vous n\'êtes pas l\'organisateur de cette sortie'], Response::HTTP_FORBIDDEN);
+        }
+
+        $etatCree = $etatRepository->find(1);  // État "Créée"
+        if ($sortie->getNoEtat()->getId() !== $etatCree->getId()) {
+            return new JsonResponse(['error' => 'La sortie ne peut pas être publiée car elle n\'est pas à l\'état "Créée"'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $etatOuvert = $etatRepository->find(2);
+        if (!$etatOuvert) {
+            return new JsonResponse(['error' => 'État "Ouvert" non trouvé'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $sortie->setNoEtat($etatOuvert);
+        $entityManager->persist($sortie);
+        $entityManager->flush();
+
+        return new JsonResponse(['success' => 'La sortie a été publiée avec succès']);
+    }
 
 
 }
