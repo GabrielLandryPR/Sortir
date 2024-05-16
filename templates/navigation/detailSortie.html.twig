@@ -4,20 +4,18 @@
     {{ parent() }}
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('CSS/detailSortie.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 {% endblock %}
 
 {% block body %}
     <div class="container mt-5">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header" data-sortie-id="{{ sortie.id }}">
                 <h1 class="card-title">{{ sortie.nomSortie }}</h1>
-                {% if sortie.idOrga.id == app.user.id %}
-                    <a href="{{ path('app_sortir_modifierSortie', {'id': sortie.id}) }}" class="btn btn-primary">Modifier</a>
-                {% endif %}
             </div>
             <div class="card-body">
                 <p><strong>Organisateur:</strong> {{ sortie.idOrga.pseudo }}</p>
-                <p><strong>Etat:</strong> {{ sortie.noEtat.libelle }}</p>
+                <p><strong class="etat">Etat:</strong> {{ sortie.noEtat.libelle }}</p>
                 <p><strong>Date et heure de la sortie:</strong> {{ sortie.dateDebut|date('d-m-Y H:i') }}</p>
                 <p><strong>Date limite d'inscription:</strong> {{ sortie.dateFin|date('d-m-Y') }}</p>
                 <p><strong>Nombre de places:</strong> {{ sortie.nbInscriptionMax }}</p>
@@ -27,8 +25,10 @@
                 <p><strong>Lieu:</strong> {{ sortie.noLieu.nomLieu }}</p>
                 <p><strong>Rue:</strong> {{ sortie.noLieu.rue }}</p>
                 <p><strong>Code postal:</strong> {{ sortie.noLieu.noVille.codePostal }}</p>
-                <p style="display:none;"><strong>Latitude:</strong> {{ sortie.noLieu.latitude }}</p>
-                <p style="display:none;"><strong>Longitude:</strong> {{ sortie.noLieu.longitude }}</p>
+                <p><strong>Latitude:</strong> <span id="latitude">{{ sortie.noLieu.latitude }}</span></p>
+                <p><strong>Longitude:</strong> <span id="longitude">{{ sortie.noLieu.longitude }}</span></p>
+
+                <div id="map" data-latitude="{{ sortie.noLieu.latitude }}" data-longitude="{{ sortie.noLieu.longitude }}" style="height: 400px;"></div>
 
                 <h2>Participants :</h2>
                 <div class="participant-list">
@@ -39,14 +39,37 @@
                     </ul>
                 </div>
             </div>
-            <div class="card-footer">
-                {% if sortie.idOrga.id == app.user.id %}
-                    <a href="{{ path('app_sortir_modifierSortie', {'id': sortie.id}) }}" class="btn btn-primary">Modifier</a>
-                {% elseif sortie.users.contains(app.user) %}
-                    <a href="#" class="btn btn-danger toggle-inscription-link" data-sortie-id="{{ sortie.id }}">Se désister</a>
-                {% elseif sortie.users|length < sortie.nbInscriptionMax %}
-                    <a href="#" class="btn btn-success toggle-inscription-link" data-sortie-id="{{ sortie.id }}">S'inscrire</a>
+            <div class="card-footer" data-user-is-organizer="{{ userIsOrganizer ? 'true' : 'false' }}" data-etat-sortie="{{ etatSortie }}" data-date-sortie="{{ sortie.dateDebut|date('Y-m-d\TH:i') }}">
+                {% if not userIsOrganizer %}
+                    {% if not sortie.users.contains(app.user) %}
+                        <button class="btn btn-success inscription-link" data-sortie-id="{{ sortie.id }}">S'inscrire</button>
+                    {% else %}
+                        <button class="btn btn-danger desinscription-link" data-sortie-id="{{ sortie.id }}">Se désister</button>
+                    {% endif %}
                 {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="annulModal" tabindex="-1" aria-labelledby="annulModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="annulModalLabel">Annuler une sortie</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="annulReason">Motif de l'annulation</label>
+                        <textarea id="annulReason" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Retour</button>
+                    <button type="button" class="btn btn-danger" id="confirmAnnulButton">Annuler la sortie</button>
+                </div>
             </div>
         </div>
     </div>
@@ -54,5 +77,9 @@
 
 {% block javascripts %}
     {{ parent() }}
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="{{ asset('js/detailSortie.js') }}"></script>
 {% endblock %}

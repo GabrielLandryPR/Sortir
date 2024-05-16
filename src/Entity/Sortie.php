@@ -20,7 +20,7 @@ class Sortie
     #[ORM\Column(length: 50)]
     private ?string $nomSortie = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Assert\GreaterThanOrEqual('today')]
     private ?\DateTimeInterface $dateDebut = null;
 
@@ -45,6 +45,8 @@ class Sortie
     #[ORM\Column]
     private int|null $organisateur = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $motifAnnulation = null;
 
     /**
      * @var Collection<int, User>
@@ -186,7 +188,17 @@ class Sortie
         return $this;
     }
 
+    public function getMotifAnnulation(): ?string
+    {
+        return $this->motifAnnulation;
+    }
 
+    public function setMotifAnnulation(?string $motifAnnulation): self
+    {
+        $this->motifAnnulation = $motifAnnulation;
+
+        return $this;
+    }
 
     /**
      * @return Collection<int, User>
@@ -259,7 +271,4 @@ class Sortie
 
         return $this;
     }
-
-
-
 }

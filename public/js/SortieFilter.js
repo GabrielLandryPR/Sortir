@@ -87,6 +87,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.addEventListener('click', function(event) {
                     event.preventDefault();
                     const sortieId = this.dataset.sortieId;
+                    const dateSortie = new Date(this.dataset.dateSortie);
+                    if (dateSortie < new Date()) {
+                        alert('La date de la sortie est antérieure à la date actuelle, vous ne pouvez pas la publier.');
+                        return;
+                    }
                     publierSortie(sortieId);
                 });
             });
@@ -201,6 +206,10 @@ document.addEventListener('DOMContentLoaded', function() {
         startDateInput.value = today;
         endDateInput.value = '';
         searchNameInput.value = '';
+        organizerCheckbox.checked = false;
+        registeredCheckbox.checked = false;
+        notRegisteredCheckbox.checked = false;
+        pastCheckbox.checked = false;
         updateSorties();
     }
 
