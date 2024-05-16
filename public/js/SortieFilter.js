@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (endDateInput.value && endDateInput.value < startDateInput.value) {
             validationInProgress = true;
-            alert("La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'.");
+            alert("La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'." +error);
             endDateInput.value = '';
             return;
         }
@@ -51,8 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Une erreur est survenue lors du chargement des données : \n'
-                    + error);
+                alert('Une erreur est survenue lors du chargement des données.' +error);
             });
     }
 
@@ -64,16 +63,78 @@ document.addEventListener('DOMContentLoaded', function() {
                 const row = `<tr>
                     <td>${sortie.nomSortie}</td>
                     <td>${sortie.dateDebut}</td>
+                    <td>${sortie.dateClotureInscription}</td>
+                    <td>${sortie.nbInscrits}/${sortie.nbInscriptionMax}</td>
                     <td>${sortie.etatSortie}</td>
-                    <td>${sortie.dateFin}</td>
-                    <td>${sortie.description}</td>
                     <td>${sortie.organisateur}</td>
+                    <td>
+                        <a href="/sortir/detailSortie/${sortie.id}">Afficher</a>
+                        ${sortie.actions}
+                    </td>
                 </tr>`;
                 sortiesBody.innerHTML += row;
             });
+
+            document.querySelectorAll('.desinscription-link').forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const sortieId = this.dataset.sortieId;
+                    desinscrire(sortieId);
+                });
+            });
+
+            document.querySelectorAll('.inscription-link').forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const sortieId = this.dataset.sortieId;
+                    inscrire(sortieId);
+                });
+            });
         } else {
-            sortiesBody.innerHTML = '<tr><td colspan="6">Aucune sortie trouvée correspondant aux critères de recherche.</td></tr>';
+            sortiesBody.innerHTML = '<tr><td colspan="7">Aucune sortie trouvée correspondant aux critères de recherche.</td></tr>';
         }
+    }
+
+    function desinscrire(sortieId) {
+        fetch(`/sortir/ajax_desinscriptionSortie/${sortieId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateSorties();
+                } else {
+                    console.error(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function inscrire(sortieId) {
+        fetch(`/sortir/ajax_inscriptionSortie/${sortieId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateSorties();
+                } else {
+                    console.error(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     }
 
     function resetFilters() {

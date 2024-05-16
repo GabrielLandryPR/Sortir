@@ -1,0 +1,4 @@
+.participant-list {
+    height: 200px;
+    overflow-y: scroll;
+}

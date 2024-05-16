@@ -4,67 +4,108 @@
     Liste des sorties
 {% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('CSS/listSortie.css') }}">
+{% endblock %}
+
 {% block body %}
-    <h1>Liste des sorties</h1>
-    <h2>Filtrer les sorties :</h2>
+    <div class="container mt-5">
+        <h1 class="mb-4">Liste des sorties</h1>
+        <h2 class="mb-4">Filtrer les sorties :</h2>
 
-    <select id="siteSelect">
-        <option value="">Tous les sites</option>
-        {% for site in sites %}
-            <option value="{{ site.id }}">{{ site.nomSite }}</option>
-        {% endfor %}
-    </select>
-
-    <form>
-        <input type="checkbox" id="organizer" name="filter" value="organizer">
-        <label for="organizer">Sorties dont je suis l'organisateur/trice</label><br>
-        <input type="checkbox" id="registered" name="filter" value="registered">
-        <label for="registered">Sorties auxquelles je suis inscrit/e</label><br>
-        <input type="checkbox" id="notRegistered" name="filter" value="notRegistered">
-        <label for="notRegistered">Sorties auxquelles je ne suis pas inscrit/e</label><br>
-        <input type="checkbox" id="past" name="filter" value="past">
-        <label for="past">Sorties passées</label><br>
-
-        <label for="startDate">Comprise entre :</label>
-        <input type="date" id="startDate" name="startDate">
-        <button type="button" id="resetDateButton">Réinitialiser les dates</button><br>
-        <label for="endDate">Et :</label>
-        <input type="date" id="endDate" name="endDate"><br>
-
-        <label for="searchName">Nom de la sortie :</label>
-        <div style="position: relative; display: inline-block;">
-            <input type="text" id="searchName" name="searchName" style="padding-right: 24px;">
-            <span id="clearSearch" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">&times;</span>
+        <div class="form-group">
+            <label for="siteSelect">Site</label>
+            <select id="siteSelect" class="form-control">
+                <option value="">Tous les sites</option>
+                {% for site in sites %}
+                    <option value="{{ site.id }}">{{ site.nomSite }}</option>
+                {% endfor %}
+            </select>
         </div>
 
-        <button type="button" id="resetButton" style="display: none;">Réinitialiser</button>
-    </form>
+        <form id="filterForm" class="mb-4">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="organizer" name="filter" value="organizer">
+                <label class="form-check-label" for="organizer">Sorties dont je suis l'organisateur/trice</label>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="registered" name="filter" value="registered">
+                <label class="form-check-label" for="registered">Sorties auxquelles je suis inscrit/e</label>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="notRegistered" name="filter" value="notRegistered">
+                <label class="form-check-label" for="notRegistered">Sorties auxquelles je ne suis pas inscrit/e</label>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="past" name="filter" value="past">
+                <label class="form-check-label" for="past">Sorties passées</label>
+            </div>
 
-    <div id="sortiesContainer">
-        <table id="sortiesTable">
-            <thead>
-            <tr>
-                <th>Nom sortie</th>
-                <th>Date début</th>
-                <th>État sortie</th>
-                <th>Date fin</th>
-                <th>Description</th>
-                <th>Organisateur</th>
-            </tr>
-            </thead>
-            <tbody id="sortiesBody">
-            {% for sortie in sorties %}
-                <tr>
-                    <td>{{ sortie.nomSortie }}</td>
-                    <td>{{ sortie.dateDebut|date('Y-m-d H:i:s') }}</td>
-                    <td>{{ sortie.noEtat.libelle }}</td>
-                    <td>{{ sortie.dateFin|date('Y-m-d H:i:s') }}</td>
-                    <td>{{ sortie.description }}</td>
-                    <td><a href="{{ path('app_sortir_annulerSortie', {'id': sortie.id}) }}">Annuler la sortie</a></td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+            <div class="form-group">
+                <label for="startDate">Comprise entre :</label>
+                <input type="date" class="form-control" id="startDate" name="startDate">
+            </div>
+            <div class="form-group">
+                <label for="endDate">Et :</label>
+                <input type="date" class="form-control" id="endDate" name="endDate">
+            </div>
+            <button type="button" id="resetDateButton" class="btn btn-secondary mb-3">Réinitialiser les dates</button>
+
+            <div class="form-group">
+                <label for="searchName">Nom de la sortie :</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchName" name="searchName">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">&times;</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="resetButton" class="btn btn-secondary" style="display: none;">Réinitialiser</button>
+        </form>
+
+        <div id="sortiesContainer">
+            <div class="table-responsive">
+                <table id="sortiesTable" class="table table-striped">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th>Nom sortie</th>
+                        <th>Date et heure</th>
+                        <th>Date clôture inscription</th>
+                        <th>Inscrits</th>
+                        <th>État sortie</th>
+                        <th>Organisateur</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="sortiesBody">
+                    {% for sortie in sorties %}
+                        <tr>
+                            <td>{{ sortie.nomSortie }}</td>
+                            <td>{{ sortie.dateDebut|date('Y-m-d H:i') }}</td>
+                            <td>{{ sortie.dateFin|date('Y-m-d H:i') }}</td>
+                            <td>{{ sortie.users|length }}/{{ sortie.nbInscriptionMax }}</td>
+                            <td>{{ sortie.noEtat.libelle }}</td>
+                            <td>{{ sortie.idOrga.pseudo ? sortie.idOrga.pseudo : sortie.idOrga.prenom ~ ' ' ~ sortie.idOrga.nom }}</td>
+                            <td>
+                                <a href="{{ path('app_sortir_detailSortie', {'id': sortie.id}) }}" class="btn btn-info btn-sm">Afficher</a>
+                                {% if sortie.idOrga and sortie.idOrga.id == app.user.id %}
+                                    <a href="{{ path('app_sortir_modifierSortie', {'id': sortie.id}) }}" class="btn btn-primary btn-sm">Modifier</a>
+                                    <a href="{{ path('app_sortir_annulerSortie', {'id': sortie.id}) }}">Annuler la sortie</a>
+                                {% elseif sortie.users.contains(app.user) %}
+                                    <a href="#" class="btn btn-danger btn-sm desinscription-link" data-sortie-id="{{ sortie.id }}">Se désister</a>
+                                {% elseif sortie.users|length < sortie.nbInscriptionMax %}
+                                    <a href="#" class="btn btn-success btn-sm inscription-link" data-sortie-id="{{ sortie.id }}">S'inscrire</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
     {% for message in app.flashes('success') %}
         <div class="alert alert-success">

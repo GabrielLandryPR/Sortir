@@ -1,33 +1,58 @@
 {% extends 'base.html.twig' %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('CSS/detailSortie.css') }}">
+{% endblock %}
+
 {% block body %}
-    <h1>{{ sortie.nomSortie }}</h1>
-    <p>Etat: {{ sortie.noEtat.libelle }}</p>
-    <p>Date et heure de la sortie: {{ sortie.dateDebut|date('d-m-Y H:i') }}</p>
-    <p>Date limite d'inscription: {{ sortie.dateFin|date('d-m-Y') }}</p>
-    <p>Nombre de places: {{ sortie.nbInscriptionMax }}</p>
-    <p>Durée: {{ sortie.duree }}</p>
-    <p>Description: {{ sortie.description }}</p>
-    <p>Ville organisatrice: {{ sortie.noSite.nomSite }}</p>
-    <p>Lieu: {{ sortie.noLieu.nomLieu }}</p>
-    <p>Rue: {{ sortie.noLieu.rue }}</p>
-    <p>Code postal: {{ sortie.noLieu.noVille.codePostal }}</p>    <p>Latitude: {{ sortie.noLieu.latitude }}</p>
-    <p>Longitude: {{ sortie.noLieu.longitude }}</p>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">{{ sortie.nomSortie }}</h1>
+                {% if sortie.idOrga.id == app.user.id %}
+                    <a href="{{ path('app_sortir_modifierSortie', {'id': sortie.id}) }}" class="btn btn-primary">Modifier</a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <p><strong>Organisateur:</strong> {{ sortie.idOrga.pseudo }}</p>
+                <p><strong>Etat:</strong> {{ sortie.noEtat.libelle }}</p>
+                <p><strong>Date et heure de la sortie:</strong> {{ sortie.dateDebut|date('d-m-Y H:i') }}</p>
+                <p><strong>Date limite d'inscription:</strong> {{ sortie.dateFin|date('d-m-Y') }}</p>
+                <p><strong>Nombre de places:</strong> {{ sortie.nbInscriptionMax }}</p>
+                <p><strong>Durée:</strong> {{ sortie.duree }}</p>
+                <p><strong>Description:</strong> {{ sortie.description }}</p>
+                <p><strong>Ville organisatrice:</strong> {{ sortie.noSite.nomSite }}</p>
+                <p><strong>Lieu:</strong> {{ sortie.noLieu.nomLieu }}</p>
+                <p><strong>Rue:</strong> {{ sortie.noLieu.rue }}</p>
+                <p><strong>Code postal:</strong> {{ sortie.noLieu.noVille.codePostal }}</p>
+                <p style="display:none;"><strong>Latitude:</strong> {{ sortie.noLieu.latitude }}</p>
+                <p style="display:none;"><strong>Longitude:</strong> {{ sortie.noLieu.longitude }}</p>
 
-    <h2>Participants :</h2>
-   <div style="height: 200px; overflow-y: scroll;">
-    <ul>
-    {% for user in sortie.users %}
-        <li>{{ user.pseudo }}</li>
-    {% endfor %}
-    </ul>
+                <h2>Participants :</h2>
+                <div class="participant-list">
+                    <ul class="list-group">
+                        {% for user in sortie.users %}
+                            <li class="list-group-item">{{ user.pseudo }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="card-footer">
+                {% if sortie.idOrga.id == app.user.id %}
+                    <a href="{{ path('app_sortir_modifierSortie', {'id': sortie.id}) }}" class="btn btn-primary">Modifier</a>
+                {% elseif sortie.users.contains(app.user) %}
+                    <a href="#" class="btn btn-danger toggle-inscription-link" data-sortie-id="{{ sortie.id }}">Se désister</a>
+                {% elseif sortie.users|length < sortie.nbInscriptionMax %}
+                    <a href="#" class="btn btn-success toggle-inscription-link" data-sortie-id="{{ sortie.id }}">S'inscrire</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
+{% endblock %}
 
-    {% if user in sortie.users %}
-        {% if user.id != sortie.idOrga.id %}
-            <a href="{{ path('app_sortir_desinscriptionSortie', {'id': sortie.id}) }}">Se désinscrire de cette sortie</a>
-        {% endif %}
-    {% else %}
-        <a href="{{ path('app_sortir_inscriptionSortie', {'id': sortie.id}) }}">S'inscrire à cette sortie</a>
-    {% endif %}
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/detailSortie.js') }}"></script>
 {% endblock %}

@@ -8,7 +8,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Repository\SortieRepository;
 
 class SortieController extends AbstractController
 {
@@ -22,6 +21,8 @@ class SortieController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $sortie->setEtat(1);
+
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->persist($sortie);
             $entityManager->flush();
@@ -29,10 +30,9 @@ class SortieController extends AbstractController
             return $this->redirectToRoute('sortie_index');
         }
 
-        return $this->render('sortie/list.html.twig', [
+        return $this->render('sortie/createSortie.html.twig', [
             'sortie' => $sortie,
             'form' => $form->createView(),
         ]);
     }
-
 }

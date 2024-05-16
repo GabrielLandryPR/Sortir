@@ -1,5 +1,3 @@
-// fichier lieu.js
-
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.querySelector('.autocomplete');
     const autocompleteResults = document.createElement('div');
@@ -26,14 +24,25 @@ document.addEventListener('DOMContentLoaded', function () {
                             const streetNumber = item.address.house_number || '';
                             const streetName = item.address.road || '';
                             const fullStreet = streetNumber ? `${streetNumber} ${streetName}` : streetName;
-                            document.getElementById('sortie_form_rue').value = fullStreet;
-                            document.getElementById('sortie_form_codePostal').value = item.address.postcode || '';
-                            document.getElementById('sortie_form_ville').value = item.address.city || item.address.town || item.address.village || '';
-                            document.getElementById('sortie_form_latitude').value = item.lat || '';
-                            document.getElementById('sortie_form_longitude').value = item.lon || '';
+
+                            const rueInput = document.getElementById('sortie_modification_form_rue');
+                            const codePostalInput = document.getElementById('sortie_modification_form_codePostal');
+                            const villeInput = document.getElementById('sortie_modification_form_ville');
+                            const latitudeInput = document.getElementById('sortie_modification_form_latitude');
+                            const longitudeInput = document.getElementById('sortie_modification_form_longitude');
+
+                            if (rueInput && codePostalInput && villeInput && latitudeInput && longitudeInput) {
+                                rueInput.value = fullStreet;
+                                codePostalInput.value = item.address.postcode || '';
+                                villeInput.value = item.address.city || item.address.town || item.address.village || '';
+                                latitudeInput.value = item.lat || '';
+                                longitudeInput.value = item.lon || '';
+                            } else {
+                                console.error("Un ou plusieurs champs de formulaire sont introuvables.");
+                            }
+
                             autocompleteResults.innerHTML = '';
 
-                            // Update the map
                             const latitude = parseFloat(item.lat);
                             const longitude = parseFloat(item.lon);
                             if (!map) {

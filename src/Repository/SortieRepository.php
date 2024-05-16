@@ -26,7 +26,7 @@ class SortieRepository extends ServiceEntityRepository
 
     }
 
-    public function findFilteredSorties($organizer = null, $registered = null, $notRegistered = null, $past = false, $site = null, $startDate = null, $endDate = null, $searchName = null) {
+    public function findFilteredSorties($organizer = null, $registered = null, $notRegistered = null, $past = false, $site = null, $startDate = null, $endDate = null, $searchName = null, $currentUser = null) {
         $qb = $this->createQueryBuilder('s');
         $conditions = [];
 
@@ -71,12 +71,22 @@ class SortieRepository extends ServiceEntityRepository
             $qb->setParameter('searchName', '%' . $searchName . '%');
         }
 
+        if ($currentUser) {
+            $conditions[] = $qb->expr()->orX(
+                $qb->expr()->neq('s.noEtat.libelle', ':etatCree'),
+                $qb->expr()->eq('s.idOrga', ':currentUser')
+            );
+            $qb->setParameter('etatCree', 'Créée');
+            $qb->setParameter('currentUser', $currentUser);
+        }
+
         if (!empty($conditions)) {
             $qb->andWhere($qb->expr()->andX()->addMultiple($conditions));
         }
 
         return $qb->getQuery()->getResult();
     }
+
 
 
     //    /**

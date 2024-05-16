@@ -12,12 +12,14 @@ use App\Form\UpdateProfilType;
 use App\Repository\SiteRepository;
 use App\Repository\SortieRepository;
 use App\Repository\UserRepository;
+use App\Form\SortieModificationFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/sortir', name: 'app_sortir')]
@@ -59,10 +61,10 @@ class HomeController extends AbstractController
     }
 
     #[Route('/list', name: '_list')]
-    public function list(Request $request, SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository): Response
+    public function list(SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository): Response
     {
+        $user = $this->getUser();
         $sites = $siteRepository->findAll();
-
         $sorties = $sortieRepository->findAll();
 
         foreach ($sorties as $sortie) {
@@ -72,7 +74,8 @@ class HomeController extends AbstractController
 
         return $this->render('navigation/list.html.twig', [
             'sorties' => $sorties,
-            'sites' => $sites
+            'sites' => $sites,
+            'user' => $user
         ]);
     }
 
@@ -85,7 +88,6 @@ class HomeController extends AbstractController
             throw $this->createNotFoundException('Utilisateur non trouvé');
         }
 
-        // Récupérer les sorties créées par l'utilisateur
         $sorties = $sortieRepository->findBy(['idOrga' => $user]);
 
         return $this->render('navigation/monProfil.html.twig', [
@@ -189,7 +191,6 @@ class HomeController extends AbstractController
                 $entityManager->flush();
             }
 
-
             $lieu = new Lieu();
             $lieu->setNomLieu($nomLieu);
             $lieu->setLatitude($latitude);
@@ -214,47 +215,104 @@ class HomeController extends AbstractController
         ]);
     }
 
-    #[Route('/modifierSortie', name: '_modifierSortie')]
-    public function modifierSorti(User $user): Response
+    #[Route('/modifierSortie/{id}', name: '_modifierSortie')]
+    public function modifierSortie(int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
-        return $this->render('navigation/createSortie.html.twig', [
-            "user" => $user
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+
+        if (!$sortie) {
+            throw $this->createNotFoundException('Sortie non trouvée');
+        }
+
+        $user = $this->getUser();
+        if ($sortie->getIdOrga()->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException('Vous n\'êtes pas autorisé à modifier cette sortie.');
+        }
+
+        $sortieFormType = $this->createForm(SortieModificationFormType::class, $sortie);
+        $sortieFormType->handleRequest($request);
+
+        if ($sortieFormType->isSubmitted() && $sortieFormType->isValid()) {
+            $file = $sortieFormType->get('urlPhoto')->getData();
+            if ($file) {
+                $fileName = uniqid() . '.' . $file->guessExtension();
+                $file->move($this->getParameter('photos_directory'), $fileName);
+                $sortie->setUrlPhoto($fileName);
+            }
+
+            // Set the new location if the search input was used
+            $nomLieu = $sortieFormType->get('lieuSearch')->getData();
+            if ($nomLieu) {
+                $latitude = $sortieFormType->get('latitude')->getData();
+                $longitude = $sortieFormType->get('longitude')->getData();
+                $street = $sortieFormType->get('rue')->getData();
+                $postalCode = $sortieFormType->get('codePostal')->getData();
+                $nomVille = $sortieFormType->get('ville')->getData();
+
+                $ville = $entityManager->getRepository(Ville::class)->findOneBy([
+                    'nomVille' => $nomVille,
+                    'codePostal' => $postalCode
+                ]);
+
+                if (!$ville) {
+                    $ville = new Ville();
+                    $ville->setNomVille($nomVille);
+                    $ville->setCodePostal($postalCode);
+                    $entityManager->persist($ville);
+                    $entityManager->flush();
+                }
+
+                $lieu = new Lieu();
+                $lieu->setNomLieu($nomLieu);
+                $lieu->setLatitude($latitude);
+                $lieu->setLongitude($longitude);
+                $lieu->setRue($street);
+                $lieu->setNoVille($ville);
+
+                $entityManager->persist($lieu);
+
+                $sortie->setNoLieu($lieu);
+            }
+
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Sortie modifiée avec succès');
+
+            return $this->redirectToRoute('app_sortir_list');
+        }
+
+        return $this->render('navigation/updateSortie.html.twig', [
+            'sortieFormType' => $sortieFormType->createView(),
+            'user' => $user
         ]);
     }
+
+
 
     #[Route('/inscriptionSortie/{id}', name: '_inscriptionSortie')]
     public function inscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-        {
-            {#$sortie = $entityManager->getRepository(Sortie::class)->find($id);#}}
-
-                if (!$user) {
-                    throw $this->createNotFoundException('utilisateur non trouvée');
-                }
-
-                $sortie = $entityManager->getRepository(Sortie::class)->find($id);
-
-                if (!$sortie) {
-                    throw $this->createNotFoundException('Sortie non trouvée');
-                }
-
-                $sortie->addUser($user);
-
-                $entityManager->persist($sortie);
-                $entityManager->flush();
-
-                return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
-            }
-
+        if (!$user) {
+            throw $this->createNotFoundException('Utilisateur non trouvé');
         }
+
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+        if (!$sortie) {
+            throw $this->createNotFoundException('Sortie non trouvée');
+        }
+
+        $sortie->addUser($user);
+        $entityManager->persist($sortie);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('app_sortir_detailSortie', ['id' => $id]);
     }
 
     #[Route('/detailSortie/{id}', name: '_detailSortie')]
     public function detailSortie(int $id, EntityManagerInterface $entityManager): Response
     {
         $sortie = $entityManager->getRepository(Sortie::class)->find($id);
-
         if (!$sortie) {
             throw $this->createNotFoundException('Sortie non trouvée');
         }
@@ -271,19 +329,16 @@ class HomeController extends AbstractController
     public function desinscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-
         if (!$user) {
             throw $this->createNotFoundException('Utilisateur non trouvé');
         }
 
         $sortie = $entityManager->getRepository(Sortie::class)->find($id);
-
         if (!$sortie) {
             throw $this->createNotFoundException('Sortie non trouvée');
         }
 
         $sortie->removeUser($user);
-
         $entityManager->persist($sortie);
         $entityManager->flush();
 
@@ -303,7 +358,6 @@ class HomeController extends AbstractController
         $endDate = $request->query->get('endDate') ? new \DateTime($request->query->get('endDate')) : null;
         $searchName = $request->query->get('searchName');
 
-        // Validate end date
         if ($endDate && $startDate && $endDate < $startDate) {
             return $this->json(['error' => "La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'."], Response::HTTP_BAD_REQUEST);
         }
@@ -320,19 +374,30 @@ class HomeController extends AbstractController
         );
 
         return $this->json([
-            'sorties' => array_map(function ($sortie) {
+            'sorties' => array_map(function ($sortie) use ($user) {
+                $actions = '';
+                if ($sortie->getIdOrga()->getId() == $user->getId()) {
+                    $actions = '<a href="' . $this->generateUrl('app_sortir_modifierSortie', ['id' => $sortie->getId()]) . '">Modifier</a>';
+                } elseif ($sortie->getUsers()->contains($user)) {
+                    $actions = '<a href="#" class="desinscription-link" data-sortie-id="' . $sortie->getId() . '">Se désister</a>';
+                } elseif ($sortie->getUsers()->count() < $sortie->getNbInscriptionMax()) {
+                    $actions = '<a href="#" class="inscription-link" data-sortie-id="' . $sortie->getId() . '">S\'inscrire</a>';
+                }
+
                 return [
+                    'id' => $sortie->getId(),
                     'nomSortie' => $sortie->getNomSortie(),
-                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
+                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i'),
+                    'dateClotureInscription' => $sortie->getDateFin()->format('Y-m-d H:i'),
+                    'nbInscrits' => $sortie->getUsers()->count(),
+                    'nbInscriptionMax' => $sortie->getNbInscriptionMax(),
                     'etatSortie' => $sortie->getNoEtat()->getLibelle(),
-                    'dateFin' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
-                    'description' => $sortie->getDescription(),
-                    'organisateur' => $sortie->getIdOrga()->getPseudo()
+                    'organisateur' => $sortie->getIdOrga()->getPseudo() ?: $sortie->getIdOrga()->getPrenom() . ' ' . $sortie->getIdOrga()->getNom(),
+                    'actions' => $actions
                 ];
             }, $sorties)
         ]);
     }
-
 
     #[Route('/filter_by_site', name: 'filter_by_site', methods: ['POST'])]
     public function filterBySite(Request $request, SortieRepository $sortieRepository): Response
@@ -357,5 +422,44 @@ class HomeController extends AbstractController
             }, $sorties)
         ]);
     }
-}
 
+    #[Route('/ajax_desinscriptionSortie/{id}', name: 'ajax_desinscriptionSortie')]
+    public function ajaxDesinscriptionSortie(int $id, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur non trouvé'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+        if (!$sortie) {
+            return new JsonResponse(['error' => 'Sortie non trouvée'], Response::HTTP_NOT_FOUND);
+        }
+
+        $sortie->removeUser($user);
+        $entityManager->persist($sortie);
+        $entityManager->flush();
+
+        return new JsonResponse(['success' => 'Vous êtes désinscrit de la sortie.']);
+    }
+
+    #[Route('/ajax_inscriptionSortie/{id}', name: 'ajax_inscriptionSortie')]
+    public function ajaxInscriptionSortie(int $id, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur non trouvé'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $sortie = $entityManager->getRepository(Sortie::class)->find($id);
+        if (!$sortie) {
+            return new JsonResponse(['error' => 'Sortie non trouvée'], Response::HTTP_NOT_FOUND);
+        }
+
+        $sortie->addUser($user);
+        $entityManager->persist($sortie);
+        $entityManager->flush();
+
+        return new JsonResponse(['success' => 'Vous êtes inscrit à la sortie.']);
+    }
+}
