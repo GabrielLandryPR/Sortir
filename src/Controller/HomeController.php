@@ -40,13 +40,6 @@ class HomeController extends AbstractController
     public function annulerSortie(int $id, EntityManagerInterface $entityManager, EtatRepository $etatRepository, SortieRepository $sortieRepository): Response
     {
 
-        if (!$this->isGranted('ROLE_USER')) {
-            // Ajout d'un message flash
-            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
-            // Redirection vers une autre page (par exemple, la liste des séries)
-            return $this->redirectToRoute('app_login');
-        }
-
         $sortie = $entityManager->getRepository(Sortie::class)->find($id);
         $idOrga = $sortie->getIdOrga();
 
