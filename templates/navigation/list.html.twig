@@ -11,64 +11,69 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container mt-5">
-        <h1 class="mb-4">Liste des sorties</h1>
-        <h2 class="mb-4">Filtrer les sorties :</h2>
+    <div class="content-container">
+        <h1 class="mb-3">Liste des sorties</h1>
+        <h2 class="mb-3">Filtrer les sorties :</h2>
 
-        <div class="form-group">
-            <label for="siteSelect">Site</label>
-            <select id="siteSelect" class="form-control">
-                <option value="">Tous les sites</option>
-                {% for site in sites %}
-                    <option value="{{ site.id }}">{{ site.nomSite }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <form id="filterForm" class="mb-4">
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="organizer" name="filter" value="organizer">
-                <label class="form-check-label" for="organizer">Sorties dont je suis l'organisateur/trice</label>
-            </div>
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="registered" name="filter" value="registered">
-                <label class="form-check-label" for="registered">Sorties auxquelles je suis inscrit/e</label>
-            </div>
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="notRegistered" name="filter" value="notRegistered">
-                <label class="form-check-label" for="notRegistered">Sorties auxquelles je ne suis pas inscrit/e</label>
-            </div>
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="past" name="filter" value="past">
-                <label class="form-check-label" for="past">Sorties passées</label>
+        <form id="filterForm" class="mb-3">
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="siteSelect">Site</label>
+                    <select id="siteSelect" class="form-control form-control-sm">
+                        <option value="">Tous les sites</option>
+                        {% for site in sites %}
+                            <option value="{{ site.id }}">{{ site.nomSite }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="startDate">Comprise entre :</label>
+                    <input type="date" class="form-control form-control-sm" id="startDate" name="startDate">
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="endDate">Et :</label>
+                    <input type="date" class="form-control form-control-sm" id="endDate" name="endDate">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="startDate">Comprise entre :</label>
-                <input type="date" class="form-control" id="startDate" name="startDate">
-            </div>
-            <div class="form-group">
-                <label for="endDate">Et :</label>
-                <input type="date" class="form-control" id="endDate" name="endDate">
-            </div>
-            <button type="button" id="resetDateButton" class="btn btn-secondary mb-3">Réinitialiser les dates</button>
-
-            <div class="form-group">
-                <label for="searchName">Nom de la sortie :</label>
-                <div class="input-group">
-                    <input type="text" class="form-control" id="searchName" name="searchName">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button" id="clearSearch">&times;</button>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="searchName">Nom de la sortie :</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-sm" id="searchName" name="searchName">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" id="clearSearch">&times;</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label>Filtres supplémentaires :</label>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="organizer" name="filter" value="organizer">
+                        <label class="form-check-label" for="organizer">Organisateur/trice</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="registered" name="filter" value="registered">
+                        <label class="form-check-label" for="registered">Inscrit/e</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="notRegistered" name="filter" value="notRegistered">
+                        <label class="form-check-label" for="notRegistered">Non inscrit/e</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="past" name="filter" value="past">
+                        <label class="form-check-label" for="past">Passées</label>
                     </div>
                 </div>
             </div>
 
-            <button type="button" id="resetButton" class="btn btn-secondary" style="display: none;">Réinitialiser</button>
+            <button type="button" id="resetDateButton" class="btn btn-secondary btn-sm mb-3">Réinitialiser les dates</button>
+            <button type="button" id="resetButton" class="btn btn-secondary btn-sm mb-3" style="display: none;">Réinitialiser</button>
         </form>
 
         <div id="sortiesContainer">
             <div class="table-responsive">
-                <table id="sortiesTable" class="table table-striped">
+                <table id="sortiesTable" class="table table-striped table-sm">
                     <thead class="thead-dark">
                     <tr>
                         <th>Nom sortie</th>
@@ -83,6 +88,12 @@
                     <tbody id="sortiesBody">
                     {% for sortie in sorties %}
                         <tr>
+                            <td>{{ sortie.nomSortie }}</td>
+                            <td>{{ sortie.dateDebut|date('d/m/Y H:i') }}</td>
+                            <td>{{ sortie.dateFin|date('d/m/Y') }}</td>
+                            <td>{{ sortie.users|length }}/{{ sortie.nbInscriptionMax }}</td>
+                            <td>{{ sortie.noEtat.libelle }}</td>
+                            <td>{{ sortie.idOrga.pseudo }}</td>
                             <td>
                                 <a href="{{ path('app_sortir_detailSortie', {'id': sortie.id}) }}" class="btn btn-info btn-sm">Afficher</a>
                                 {% if sortie.idOrga and sortie.idOrga.id == app.user.id %}
@@ -100,7 +111,6 @@
                                     <a href="#" class="btn btn-success btn-sm inscription-link" data-sortie-id="{{ sortie.id }}">S'inscrire</a>
                                 {% endif %}
                             </td>
-
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -108,6 +118,7 @@
             </div>
         </div>
     </div>
+
     {% for message in app.flashes('success') %}
         <div class="alert alert-success">
             {{ message }}
