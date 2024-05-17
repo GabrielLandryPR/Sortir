@@ -477,7 +477,7 @@ class HomeController extends AbstractController
                     'id' => $sortie->getId(),
                     'nomSortie' => $sortie->getNomSortie(),
                     'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
-                    'dateClotureInscription' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
+                    'dateClotureInscription' => $sortie->getDateFin()->format('Y-m-d'),
                     'nbInscrits' => $sortie->getUsers()->count(),
                     'nbInscriptionMax' => $sortie->getNbInscriptionMax(),
                     'etatSortie' => $sortie->getNoEtat()->getLibelle(),
