@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     dateFinInput.addEventListener('change', function() {
-        if (dateFinInput.value && dateFinInput.value < dateDebutInput.value) {
-            alert("La date limite d'inscription ne peut pas être antérieure à la date de début.");
+        if (dateFinInput.value && dateFinInput.value > dateDebutInput.value) {
+            alert("La date limite d'inscription ne peut pas être supérieure à la date de début.");
             dateFinInput.value = '';
         }
     });
