@@ -93,6 +93,13 @@ class HomeController extends AbstractController
     #[Route('/list', name: '_list')]
     public function list(SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository, EtatRepository $etatRepository, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $this->updateSortiesEtat($sortieRepository, $etatRepository, $entityManager);
         $user = $this->getUser();
         $sites = $siteRepository->findAll();
