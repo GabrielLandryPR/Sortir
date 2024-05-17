@@ -86,33 +86,6 @@
                     </tr>
                     </thead>
                     <tbody id="sortiesBody">
-                    {% for sortie in sorties %}
-                        <tr>
-                            <td>{{ sortie.nomSortie }}</td>
-                            <td>{{ sortie.dateDebut|date('d/m/Y H:i') }}</td>
-                            <td>{{ sortie.dateFin|date('d/m/Y') }}</td>
-                            <td>{{ sortie.users|length }}/{{ sortie.nbInscriptionMax }}</td>
-                            <td>{{ sortie.noEtat.libelle }}</td>
-                            <td>{{ sortie.idOrga.pseudo }}</td>
-                            <td>
-                                <a href="{{ path('app_sortir_detailSortie', {'id': sortie.id}) }}" class="btn btn-info btn-sm">Afficher</a>
-                                {% if sortie.idOrga and sortie.idOrga.id == app.user.id %}
-                                    {% if sortie.noEtat.id != 6 %} {# État autre que "Annulée" #}
-                                        <a href="{{ path('app_sortir_modifierSortie', {'id': sortie.id}) }}" class="btn btn-primary btn-sm">Modifier</a>
-                                    {% endif %}
-                                    {% if sortie.noEtat.id == 1 %} {# État "Créée" #}
-                                        <button class="btn btn-success btn-sm publier-sortie" data-sortie-id="{{ sortie.id }}">Publier</button>
-                                    {% elseif sortie.noEtat.id != 6 %} {# État autre que "Annulée" #}
-                                        <button class="btn btn-warning btn-sm annuler-sortie" data-sortie-id="{{ sortie.id }}">Annuler</button>
-                                    {% endif %}
-                                {% elseif sortie.users.contains(app.user) %}
-                                    <a href="#" class="btn btn-danger btn-sm desinscription-link" data-sortie-id="{{ sortie.id }}">Se désister</a>
-                                {% elseif sortie.users|length < sortie.nbInscriptionMax %}
-                                    <a href="#" class="btn btn-success btn-sm inscription-link" data-sortie-id="{{ sortie.id }}">S'inscrire</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
                     </tbody>
                 </table>
             </div>
