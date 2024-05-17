@@ -62,8 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
             data.sorties.forEach(sortie => {
                 const row = `<tr>
                 <td>${sortie.nomSortie}</td>
-                <td>${sortie.dateDebut}</td>
-                <td>${sortie.dateClotureInscription || 'N/A'}</td>
+                <td>${new Date(sortie.dateDebut).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                <td>${new Date(sortie.dateClotureInscription).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                 <td>${sortie.nbInscrits}/${sortie.nbInscriptionMax}</td>
                 <td>${sortie.etatSortie}</td>
                 <td>${sortie.organisateur}</td>
@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
             sortiesBody.innerHTML = '<tr><td colspan="7">Aucune sortie trouvée correspondant aux critères de recherche.</td></tr>';
         }
     }
+
 
 
     function annulerSortie(sortieId) {
