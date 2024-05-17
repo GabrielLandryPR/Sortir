@@ -1,13 +1,19 @@
 {% extends 'base.html.twig' %}
 
+{% block title %}
+    Modifier une sortie
+{% endblock %}
+
 {% block body %}
-    <h1>Modifier une sortie</h1>
+    <div class="content-container">
+        <h1>Modifier une sortie</h1>
 
-    {{ form_start(sortieFormType, {'attr': {'class': 'my-form'}}) }}
-    {{ form_widget(sortieFormType) }}
-    {{ form_end(sortieFormType) }}
+        {{ form_start(sortieFormType, {'attr': {'class': 'my-form'}}) }}
+        {{ form_widget(sortieFormType) }}
+        {{ form_end(sortieFormType) }}
 
-    <div id="map" style="height: 400px;"></div>
+        <div id="map" style="height: 200px; margin-top: 20px;"></div>
+    </div>
 {% endblock %}
 
 {% block javascripts %}

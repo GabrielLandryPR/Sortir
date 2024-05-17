@@ -1,9 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Modifier profil{% endblock %}
+{% block title %}
+    Modifier profil
+{% endblock %}
 
 {% block body %}
-    <div class="container mt-5">
+    <div class="content-container mt-5">
         <h1>Modifier le profil de {{ user.pseudo }}</h1>
 
         {{ form_start(updateProfilForm) }}

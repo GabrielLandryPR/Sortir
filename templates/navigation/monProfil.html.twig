@@ -5,11 +5,11 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container mt-5">
+    <div class="content-container mt-5">
         <h1>Mon profil</h1>
         {% if app.user %}
             {% if app.user.urlPhoto %}
-                <div class="mb-3">
+                <div class="mb-3 text-center">
                     <img src="{{ asset('uploads/photos/' ~ app.user.urlPhoto) }}" alt="Photo de profil" class="profile-image">
                 </div>
             {% endif %}
