@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Repository\EtatRepository;
 use App\Repository\SortieRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -270,5 +271,21 @@ class Sortie
         $this->noSite = $noSite;
 
         return $this;
+    }
+
+    public function updateEtat(EtatRepository $etatRepository): void
+    {
+        $now = new \DateTime();
+        if ($this->getDateDebut() <= $now && $this->getNoEtat()->getId() == 2) {
+            $this->setNoEtat($etatRepository->find(4)); // En cours
+        }
+        if ($this->getDateDebut()->add(new \DateInterval('PT' . $this->getDuree() . 'M')) <= $now) {
+            $this->setNoEtat($etatRepository->find(6)); // Passée
+        }
+        if ($this->getUsers()->count() >= $this->getNbInscriptionMax()) {
+            $this->setNoEtat($etatRepository->find(3)); // Clôturée
+        } elseif ($this->getUsers()->count() < $this->getNbInscriptionMax() && $this->getNoEtat()->getId() == 3) {
+            $this->setNoEtat($etatRepository->find(1)); // Ouvert
+        }
     }
 }

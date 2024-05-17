@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${sortie.etatSortie}</td>
                 <td>${sortie.organisateur}</td>
                 <td>
-                    <a href="/sortir/detailSortie/${sortie.id}" class="btn btn-info btn-sm">Afficher</a>
+                    ${sortie.etatSortie !== 'Passée' ? `<a href="/sortir/detailSortie/${sortie.id}" class="btn btn-info btn-sm">Afficher</a>` : ''}
                     ${sortie.actions}
                 </td>
             </tr>`;
@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
             sortiesBody.innerHTML = '<tr><td colspan="7">Aucune sortie trouvée correspondant aux critères de recherche.</td></tr>';
         }
     }
+
 
 
 

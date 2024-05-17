@@ -25,6 +25,15 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[Route('/sortir', name: 'app_sortir')]
 class HomeController extends AbstractController
 {
+    private function updateSortiesEtat(SortieRepository $sortieRepository, EtatRepository $etatRepository, EntityManagerInterface $entityManager): void
+    {
+        $sorties = $sortieRepository->findAll();
+        foreach ($sorties as $sortie) {
+            $sortie->updateEtat($etatRepository);
+            $entityManager->persist($sortie);
+        }
+        $entityManager->flush();
+    }
 
     #[Route('/annulerSortie/{id}', name: '_annulerSortie')]
     public function annulerSortie(int $id, EntityManagerInterface $entityManager, EtatRepository $etatRepository, SortieRepository $sortieRepository): Response
@@ -73,8 +82,9 @@ class HomeController extends AbstractController
     }
 
     #[Route('/list', name: '_list')]
-    public function list(SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository): Response
+    public function list(SortieRepository $sortieRepository, SiteRepository $siteRepository, UserRepository $userRepository, EtatRepository $etatRepository, EntityManagerInterface $entityManager): Response
     {
+        $this->updateSortiesEtat($sortieRepository, $etatRepository, $entityManager);
         $user = $this->getUser();
         $sites = $siteRepository->findAll();
         $sorties = $sortieRepository->findAll();

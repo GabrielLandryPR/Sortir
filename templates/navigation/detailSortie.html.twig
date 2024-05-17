@@ -23,18 +23,16 @@
                 <p><strong>Date et heure de la sortie:</strong> {{ sortie.dateDebut|date('d-m-Y H:i') }}</p>
                 <p><strong>Date limite d'inscription:</strong> {{ sortie.dateFin|date('d-m-Y') }}</p>
                 <p><strong>Nombre de places:</strong> {{ sortie.nbInscriptionMax }}</p>
-                <p><strong>Durée:</strong> {{ sortie.duree }}</p>
+                <p><strong>Durée:</strong> {{ sortie.duree }} minutes</p>
                 <p><strong>Description:</strong> {{ sortie.description }}</p>
                 <p><strong>Ville organisatrice:</strong> {{ sortie.noSite.nomSite }}</p>
                 <p><strong>Lieu:</strong> {{ sortie.noLieu.nomLieu }}</p>
                 <p><strong>Rue:</strong> {{ sortie.noLieu.rue }}</p>
                 <p><strong>Code postal:</strong> {{ sortie.noLieu.noVille.codePostal }}</p>
-                <p><strong>Latitude:</strong> <span id="latitude">{{ sortie.noLieu.latitude }}</span></p>
-                <p><strong>Longitude:</strong> <span id="longitude">{{ sortie.noLieu.longitude }}</span></p>
 
                 <div id="map" data-latitude="{{ sortie.noLieu.latitude }}" data-longitude="{{ sortie.noLieu.longitude }}" style="height: 200px; margin-top: 20px;"></div>
 
-                <h2>Participants :</h2>
+                <h2>Participants ({{ sortie.users|length }}):</h2>
                 <div class="participant-list">
                     <ul class="list-group">
                         {% for user in sortie.users %}
