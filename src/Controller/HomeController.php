@@ -91,6 +91,7 @@ class HomeController extends AbstractController
         ]);
     }
 
+
     #[Route('/monProfil', name: '_monProfil')]
     public function monProfil(SortieRepository $sortieRepository): Response
     {
@@ -453,20 +454,17 @@ class HomeController extends AbstractController
             $searchName
         );
 
-        $filteredSorties = array_filter($sorties, function ($sortie) use ($user) {
-            return $sortie->getNoEtat()->getId() !== 1 || $sortie->getIdOrga()->getId() === $user->getId();
-        });
-
         return $this->json([
             'sorties' => array_map(function ($sortie) use ($user) {
                 $actions = '';
-                if ($sortie->getIdOrga()->getId() == $user->getId()) {
-                    if ($sortie->getNoEtat()->getId() != 6) {  // État autre que "Annulée"
+
+                if ($sortie->getIdOrga()->getId() === $user->getId()) {
+                    if ($sortie->getNoEtat()->getId() !== 6) {
                         $actions .= ' <a href="' . $this->generateUrl('app_sortir_modifierSortie', ['id' => $sortie->getId()]) . '" class="btn btn-primary btn-sm">Modifier</a>';
                     }
-                    if ($sortie->getNoEtat()->getId() == 1) {  // État "Créée"
+                    if ($sortie->getNoEtat()->getId() === 1) {
                         $actions .= ' <button class="btn btn-success btn-sm publier-sortie" data-sortie-id="' . $sortie->getId() . '">Publier</button>';
-                    } elseif ($sortie->getNoEtat()->getId() != 6) {  // État autre que "Annulée"
+                    } elseif ($sortie->getNoEtat()->getId() !== 6) {
                         $actions .= ' <button class="btn btn-warning btn-sm annuler-sortie" data-sortie-id="' . $sortie->getId() . '">Annuler</button>';
                     }
                 } elseif ($sortie->getUsers()->contains($user)) {
@@ -478,17 +476,21 @@ class HomeController extends AbstractController
                 return [
                     'id' => $sortie->getId(),
                     'nomSortie' => $sortie->getNomSortie(),
-                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i'),
-                    'dateClotureInscription' => $sortie->getDateFin()->format('Y-m-d H:i'),
+                    'dateDebut' => $sortie->getDateDebut()->format('Y-m-d H:i:s'),
+                    'dateClotureInscription' => $sortie->getDateFin()->format('Y-m-d H:i:s'),
                     'nbInscrits' => $sortie->getUsers()->count(),
                     'nbInscriptionMax' => $sortie->getNbInscriptionMax(),
                     'etatSortie' => $sortie->getNoEtat()->getLibelle(),
-                    'organisateur' => $sortie->getIdOrga()->getPseudo() ?: $sortie->getIdOrga()->getPrenom() . ' ' . $sortie->getIdOrga()->getNom(),
+                    'description' => $sortie->getDescription(),
+                    'organisateur' => $sortie->getIdOrga()->getPseudo(),
                     'actions' => $actions
                 ];
-            }, $filteredSorties)
+            }, $sorties)
         ]);
     }
+
+
+
 
     #[Route('/ajax_annulerSortie/{id}', name: 'ajax_annulerSortie', methods: ['POST'])]
     public function ajaxAnnulerSortie(int $id, Request $request, EntityManagerInterface $entityManager, EtatRepository $etatRepository): JsonResponse

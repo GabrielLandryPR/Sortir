@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (endDateInput.value && endDateInput.value < startDateInput.value) {
             validationInProgress = true;
-            alert("La date 'Et' ne peut pas être antérieure à la date 'Comprise entre'.");
+            alert("La date dernière date ne peut pas être antérieure que la première.");
             endDateInput.value = '';
             return;
         }
@@ -61,20 +61,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.sorties && data.sorties.length > 0) {
             data.sorties.forEach(sortie => {
                 const row = `<tr>
-                    <td>${sortie.nomSortie}</td>
-                    <td>${sortie.dateDebut}</td>
-                    <td>${sortie.dateClotureInscription}</td>
-                    <td>${sortie.nbInscrits}/${sortie.nbInscriptionMax}</td>
-                    <td>${sortie.etatSortie}</td>
-                    <td>${sortie.organisateur}</td>
-                    <td>
-                        <a href="/sortir/detailSortie/${sortie.id}" class="btn btn-info btn-sm">Afficher</a>
-                        ${sortie.actions}
-                    </td>
-                </tr>`;
+                <td>${sortie.nomSortie}</td>
+                <td>${sortie.dateDebut}</td>
+                <td>${sortie.dateClotureInscription || 'N/A'}</td>
+                <td>${sortie.nbInscrits}/${sortie.nbInscriptionMax}</td>
+                <td>${sortie.etatSortie}</td>
+                <td>${sortie.organisateur}</td>
+                <td>
+                    <a href="/sortir/detailSortie/${sortie.id}" class="btn btn-info btn-sm">Afficher</a>
+                    ${sortie.actions}
+                </td>
+            </tr>`;
                 sortiesBody.innerHTML += row;
             });
 
+            // Ajout des écouteurs d'événements pour les nouveaux boutons ajoutés
             document.querySelectorAll('.annuler-sortie').forEach(button => {
                 button.addEventListener('click', function(event) {
                     event.preventDefault();
@@ -87,11 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.addEventListener('click', function(event) {
                     event.preventDefault();
                     const sortieId = this.dataset.sortieId;
-                    const dateSortie = new Date(this.dataset.dateSortie);
-                    if (dateSortie < new Date()) {
-                        alert('La date de la sortie est antérieure à la date actuelle, vous ne pouvez pas la publier.');
-                        return;
-                    }
                     publierSortie(sortieId);
                 });
             });
@@ -115,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
             sortiesBody.innerHTML = '<tr><td colspan="7">Aucune sortie trouvée correspondant aux critères de recherche.</td></tr>';
         }
     }
+
 
     function annulerSortie(sortieId) {
         fetch(`/sortir/ajax_annulerSortie/${sortieId}`, {
