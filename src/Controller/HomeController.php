@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/sortir', name: 'app_sortir')]
@@ -38,6 +39,14 @@ class HomeController extends AbstractController
     #[Route('/annulerSortie/{id}', name: '_annulerSortie')]
     public function annulerSortie(int $id, EntityManagerInterface $entityManager, EtatRepository $etatRepository, SortieRepository $sortieRepository): Response
     {
+
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $sortie = $entityManager->getRepository(Sortie::class)->find($id);
         $idOrga = $sortie->getIdOrga();
 
@@ -105,6 +114,13 @@ class HomeController extends AbstractController
     #[Route('/monProfil', name: '_monProfil')]
     public function monProfil(SortieRepository $sortieRepository): Response
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $user = $this->getUser();
 
         if (!$user) {
@@ -122,6 +138,13 @@ class HomeController extends AbstractController
     #[Route('/updateProfil/{id}', name: '_updateProfil')]
     public function updateProfil(Request $request, int $id, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $user = $entityManager->getRepository(User::class)->find($id);
 
         if (!$user) {
@@ -174,6 +197,13 @@ class HomeController extends AbstractController
     #[Route('/createSortie', name: '_createSortie')]
     public function creerSortie(Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $user = $this->getUser();
         $sortie = new Sortie();
         $sortie->setOrganisateur($user->getId());
@@ -241,6 +271,13 @@ class HomeController extends AbstractController
     #[Route('/modifierSortie/{id}', name: '_modifierSortie')]
     public function modifierSortie(int $id, Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $sortie = $entityManager->getRepository(Sortie::class)->find($id);
 
         if (!$sortie) {
@@ -314,6 +351,13 @@ class HomeController extends AbstractController
     #[Route('/inscriptionSortie/{id}', name: '_inscriptionSortie')]
     public function inscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $user = $this->getUser();
         if (!$user) {
             throw $this->createNotFoundException('Utilisateur non trouvé');
@@ -334,6 +378,13 @@ class HomeController extends AbstractController
     #[Route('/detailSortie/{id}', name: '_detailSortie')]
     public function detailSortie(int $id, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $sortie = $entityManager->getRepository(Sortie::class)->find($id);
         if (!$sortie) {
             throw $this->createNotFoundException('Sortie non trouvée');
@@ -355,6 +406,13 @@ class HomeController extends AbstractController
     #[Route('/desinscriptionSortie/{id}', name: '_desinscriptionSortie')]
     public function desinscriptionSortie(int $id, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $user = $this->getUser();
         if (!$user) {
             throw $this->createNotFoundException('Utilisateur non trouvé');
@@ -399,6 +457,13 @@ class HomeController extends AbstractController
     #[Route('/ajax_desinscriptionSortie/{id}', name: 'ajax_desinscriptionSortie')]
     public function ajaxDesinscriptionSortie(int $id, EntityManagerInterface $entityManager): JsonResponse
     {
+        if (!$this->isGranted('ROLE_USER')) {
+            // Ajout d'un message flash
+            $this->addFlash('error', "Connecter vous pour accéder à cette page.");
+            // Redirection vers une autre page (par exemple, la liste des séries)
+            return $this->redirectToRoute('app_login');
+        }
+
         $user = $this->getUser();
         if (!$user) {
             return new JsonResponse(['error' => 'Utilisateur non trouvé'], Response::HTTP_UNAUTHORIZED);

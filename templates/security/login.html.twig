@@ -13,6 +13,11 @@
                         <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
                     {% endif %}
                     <h1 class="h3 mb-3 font-weight-normal text-center">Se connecter</h1>
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-danger">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
                     <div class="form-group">
                         <label for="inputLogin">Login</label>
                         <input value="{{ last_username }}" name="login" id="inputLogin" class="form-control" required autofocus>
